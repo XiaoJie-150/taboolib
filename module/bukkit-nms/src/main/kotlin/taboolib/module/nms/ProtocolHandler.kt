@@ -138,7 +138,7 @@ object ProtocolHandler : OpenListener {
      * 卸载 LightInjector，需要其他插件立刻顶替
      */
     @Awake(LifeCycle.DISABLE)
-    private fun onDisable(s: String) {
+    private fun onDisable() {
         if (TabooLib.isStopped()) {
             return
         }
