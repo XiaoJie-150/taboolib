@@ -62,7 +62,7 @@ class ResourceReader(val clazz: Class<*>, val migrate: Boolean = true) {
                     files[code] = it
                     // 文件变动监听
                     if (isFileWatcherHook) {
-                        FileWatcher.INSTANCE.addSimpleListener(file) {
+                        FileWatcher.INSTANCE.addSimpleListener(file) { _ ->
                             it.nodes.clear()
                             loadNodes(sourceFile, it.nodes, code)
                             loadNodes(Configuration.loadFromFile(file), it.nodes, code)
