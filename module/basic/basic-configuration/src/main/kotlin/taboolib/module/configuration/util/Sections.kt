@@ -41,7 +41,7 @@ fun <T> ConfigurationSection.mapListAs(path: String, transform: (Map<String, Any
 /**
  * 将左侧配置文件合并进入右侧配置文件，可以选择是否覆盖相同的节点。
  */
-fun ConfigurationSection.mergeTo(section: ConfigurationSection, overwrite: Boolean) {
+fun ConfigurationSection.mergeTo(section: ConfigurationSection, overwrite: Boolean = true): ConfigurationSection {
     getKeys(false).forEach { key ->
         // 如果当前节点是配置节，则递归合并
         if (isConfigurationSection(key)) {
@@ -55,4 +55,5 @@ fun ConfigurationSection.mergeTo(section: ConfigurationSection, overwrite: Boole
             }
         }
     }
+    return section
 }
