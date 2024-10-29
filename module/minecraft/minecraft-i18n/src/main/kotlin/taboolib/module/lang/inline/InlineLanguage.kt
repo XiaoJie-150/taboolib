@@ -23,15 +23,21 @@ import taboolib.module.configuration.util.getStringListColored
  * ```
  */
 fun ConfigurationSection.getTranslatedString(path: String): TranslatedString? {
-    val node = getLanguageNode(path) ?: return null
+    val node = getLanguageNode(path)
     val defaultValue = getStringColored(path) ?: return null
-    return TranslatedString(node, defaultValue)
+    return if (node != null) TranslatedString(node, defaultValue) else TranslatedString.of(defaultValue)
 }
 
-fun ConfigurationSection.getTranslatedStringList(path: String): TranslatedStringList? {
-    val node = getLanguageNode(path) ?: return null
+fun ConfigurationSection.getTranslatedString(path: String, def: String): TranslatedString {
+    val node = getLanguageNode(path)
+    val defaultValue = getStringColored(path) ?: def
+    return if (node != null) TranslatedString(node, defaultValue) else TranslatedString.of(defaultValue)
+}
+
+fun ConfigurationSection.getTranslatedStringList(path: String): TranslatedStringList {
+    val node = getLanguageNode(path)
     val defaultValue = if (isList(path)) getStringListColored(path) else getStringColored(path)?.lines() ?: emptyList()
-    return TranslatedStringList(node, defaultValue)
+    return if (node != null) TranslatedStringList(node, defaultValue) else TranslatedStringList.of(defaultValue)
 }
 
 fun ConfigurationSection.getLanguageNode(path: String): String? {
