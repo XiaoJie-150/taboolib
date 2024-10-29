@@ -6,10 +6,8 @@ import taboolib.module.configuration.Configuration
 /**
  * 将任意 [Map] 或 [Configuration] 转换为 [Map<String, Any?>]
  */
-fun Any?.asMap(): Map<String, Any?> = when (this) {
-    is Map<*, *> -> entries.associate { it.key.toString() to it.value }
-    is ConfigurationSection -> getValues(false)
-    else -> emptyMap()
+fun Any?.asMap(): Map<String, Any?> {
+    return if (this != null) Configuration.parse(this).getValues(false) else emptyMap()
 }
 
 fun <V> ConfigurationSection.map(transform: (String, Any) -> V): Map<String, V> {
