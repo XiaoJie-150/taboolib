@@ -146,8 +146,8 @@ class ItemTag12005 : ItemTag {
     /**
      * 在 1.20.5 上将完整的 [ItemTag]（包含类型、数量等之前没有的信息）写入物品
      */
-    override fun saveTo(item: ItemStack): ItemStack {
-        val newItem = item.setItemTag(this)
+    override fun saveTo(item: ItemStack, onlyCustom: Boolean): ItemStack {
+        val newItem = item.setItemTag(this, onlyCustom)
         item.type = newItem.type
         item.amount = newItem.amount
         item.durability = newItem.durability
