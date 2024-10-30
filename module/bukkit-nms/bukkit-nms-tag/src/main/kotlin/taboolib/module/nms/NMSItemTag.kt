@@ -101,14 +101,14 @@ abstract class NMSItemTag {
          * 获取 [ItemStack] 的 NMS 副本
          */
         fun asNMSCopy(item: ItemStack): Any {
-            return nmsProxy<NMSItemTag>().getNMSCopy(item)
+            return instance.getNMSCopy(item)
         }
 
         /**
          * 获取 NMS 物品的 Bukkit 副本
          */
         fun asBukkitCopy(item: Any): ItemStack {
-            return nmsProxy<NMSItemTag>().getBukkitCopy(item)
+            return instance.getBukkitCopy(item)
         }
     }
 }
