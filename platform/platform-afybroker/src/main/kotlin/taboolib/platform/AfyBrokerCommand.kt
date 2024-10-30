@@ -16,6 +16,7 @@ import taboolib.common.platform.command.component.CommandBase
 import taboolib.common.platform.function.adaptCommandSender
 import taboolib.common.platform.function.warning
 import taboolib.common.platform.service.PlatformCommand
+import taboolib.common.util.t
 import taboolib.platform.type.AfyBrokerCommandSender
 
 /**
@@ -61,8 +62,18 @@ class AfyBrokerCommand : PlatformCommand {
 
     override fun unknownCommand(sender: ProxyCommandSender, command: String, state: Int) {
         when (state) {
-            1 -> warning("Command not found.")
-            2 -> warning("Unknown or incomplete command.")
+            1 -> warning(
+                """
+                    命令未找到。
+                    Command not found.
+                """.t()
+            )
+            2 -> warning(
+                """
+                    未知或不完整的命令。
+                    Unknown or incomplete command.
+                """.t()
+            )
             else -> return
         }
     }

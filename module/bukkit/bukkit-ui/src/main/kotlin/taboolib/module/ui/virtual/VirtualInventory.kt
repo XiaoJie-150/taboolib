@@ -7,6 +7,7 @@ import org.bukkit.event.inventory.InventoryType
 import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.InventoryHolder
 import org.bukkit.inventory.ItemStack
+import taboolib.common.util.t
 
 /**
  * TabooLib
@@ -34,7 +35,12 @@ class VirtualInventory(val bukkitInventory: Inventory, storageContents: List<Ite
     init {
         // 重复包装检查
         if (bukkitInventory is VirtualInventory) {
-            error("VirtualInventory can not be wrapped again.")
+            error(
+                """
+                    VirtualInventory 不能被再次包装。
+                    VirtualInventory can not be wrapped again.
+                """.t()
+            )
         }
     }
 
@@ -43,7 +49,12 @@ class VirtualInventory(val bukkitInventory: Inventory, storageContents: List<Ite
         if (storageContents == null) {
             // 初始化玩家玩家部分
             if (remoteInventory == null) {
-                error("VirtualInventory is not opened or storageContents is not set.")
+                error(
+                    """
+                        VirtualInventory 未打开或 storageContents 未设置。
+                        VirtualInventory is not opened or storageContents is not set.
+                    """.t()
+                )
             }
             storageContents = remoteInventory!!.viewer.getStorageItems().map { it ?: ItemStack(Material.AIR) }
         }

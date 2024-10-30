@@ -3,6 +3,7 @@ package taboolib.module.kether
 import com.mojang.datafixers.kinds.App
 import taboolib.common.platform.ProxyPlayer
 import taboolib.common.platform.function.warning
+import taboolib.common.util.t
 import taboolib.library.kether.*
 import taboolib.library.kether.Parser.*
 import java.nio.charset.StandardCharsets
@@ -102,9 +103,19 @@ fun Throwable.printKetherErrorMessage(detailError: Boolean = false) {
         return
     }
     if (javaClass.name.endsWith("kether.LocalizedException") || javaClass.name.endsWith("kether.LocalizedException\$Concat")) {
-        warning("Unexpected exception while parsing kether script:")
+        warning(
+            """
+                解析 Kether 语句时发生了意外的异常：
+                Unexpected exception while parsing kether script:
+            """.t()
+        )
     } else {
-        warning("Unexpected exception while running the kether script.")
+        warning(
+            """
+                运行 Kether 语句时发生了意外的异常：
+                Unexpected exception while running the kether script.
+            """.t()
+        )
     }
     localizedMessage.split('\n').forEach { warning(it) }
 }

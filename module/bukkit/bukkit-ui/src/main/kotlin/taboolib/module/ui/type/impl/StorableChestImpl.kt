@@ -4,6 +4,7 @@ import org.bukkit.Material
 import org.bukkit.event.inventory.InventoryAction
 import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.ItemStack
+import taboolib.common.util.t
 import taboolib.module.ui.ClickEvent
 import taboolib.module.ui.ClickType
 import taboolib.module.ui.type.*
@@ -19,7 +20,12 @@ open class StorableChestImpl(title: String) : ChestImpl(title), StorableChest {
      * 定义页面规则
      */
     override fun rule(rule: StorableChest.Rule.() -> Unit) {
-        if (virtualized) error("cannot change rule when virtualized")
+        if (virtualized) error(
+            """
+                无法在虚拟页面中更改规则。
+                Cannot change rule when virtualized
+            """.t()
+        )
         rule(this.rule)
     }
 

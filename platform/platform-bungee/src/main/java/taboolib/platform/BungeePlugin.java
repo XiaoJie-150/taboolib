@@ -14,6 +14,8 @@ import taboolib.common.platform.Plugin;
 import java.io.File;
 import java.util.concurrent.TimeUnit;
 
+import static taboolib.common.PrimitiveIO.t;
+
 /**
  * TabooLib
  * taboolib.platform.BungeePlugin
@@ -36,7 +38,13 @@ public class BungeePlugin extends net.md_5.bungee.api.plugin.Plugin {
                 IsolatedClassLoader.init(BungeePlugin.class);
             } catch (Throwable ex) {
                 TabooLib.setStopped(true);
-                PrimitiveIO.error("Failed to initialize primitive loader, the plugin \"{0}\" will be disabled!", PrimitiveIO.getRunningFileName());
+                PrimitiveIO.error(
+                        t(
+                                "无法初始化原始加载器，插件 \"{0}\" 将被禁用！",
+                                "Failed to initialize primitive loader, the plugin \"{0}\" will be disabled!"
+                        ),
+                        PrimitiveIO.getRunningFileName()
+                );
                 throw ex;
             }
             // 生命周期任务

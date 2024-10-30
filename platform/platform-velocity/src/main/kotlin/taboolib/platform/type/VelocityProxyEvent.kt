@@ -2,6 +2,7 @@ package taboolib.platform.type
 
 import com.velocitypowered.api.event.ResultedEvent
 import com.velocitypowered.api.event.ResultedEvent.GenericResult
+import taboolib.common.PrimitiveIO.t
 import taboolib.platform.VelocityPlugin
 
 open class VelocityProxyEvent : ResultedEvent<GenericResult> {
@@ -19,7 +20,7 @@ open class VelocityProxyEvent : ResultedEvent<GenericResult> {
         if (allowCancelled) {
             isCancelled = !result.isAllowed
         } else {
-            error("Event cannot be cancelled.")
+            error(t("这个事件无法被取消。", "This event cannot be cancelled."))
         }
     }
 

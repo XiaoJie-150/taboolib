@@ -10,6 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Supplier;
@@ -45,9 +46,20 @@ public class PrimitiveIO {
      **/
     private static String runningFileName = "TabooLib";
 
+    /**
+     * 是否为中文环境
+     * 如果在获取的时候发生异常，默认视为中文环境
+     */
+    private static boolean isChineseEnvironment = true;
+
     private static final Logger logger;
 
     static {
+        // 获取语言环境
+        try {
+            isChineseEnvironment = Locale.getDefault().toLanguageTag().startsWith("zh");
+        } catch (Throwable ignored) {
+        }
         // 获取插件文件
         try {
             runningFileName = new File(PrimitiveIO.class.getProtectionDomain().getCodeSource().getLocation().getFile()).getName();
@@ -216,5 +228,21 @@ public class PrimitiveIO {
 
     public static String getRunningFileName() {
         return runningFileName;
+    }
+
+    public static boolean isChineseEnvironment() {
+        return isChineseEnvironment;
+    }
+
+    /**
+     * 针对中文环境进行特殊适配，以支持在中文环境中输出本土化的提示信息。
+     * 其他语言环境均输出英文。
+     */
+    public static String t(String zh, String en) {
+        if (isChineseEnvironment) {
+            return zh;
+        } else {
+            return en;
+        }
     }
 }

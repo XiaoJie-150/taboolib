@@ -59,7 +59,13 @@ open class ConfigFile(root: Config) : ConfigSection(root), Configuration {
      * @throws IllegalStateException 如果未指定文件
      */
     override fun saveToFile(file: File?) {
-        (file ?: this.file)?.writeText(saveToString()) ?: error("File not specified")
+        val saveFile = file ?: this.file ?: error(
+            """
+                原始文件未定义。
+                The original file is not defined.
+            """.trimIndent()
+        )
+        saveFile.writeText(saveToString())
     }
 
     /**

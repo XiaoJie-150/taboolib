@@ -3,6 +3,7 @@
 package taboolib.module.kether.action
 
 import taboolib.common.platform.function.warning
+import taboolib.common.util.t
 import taboolib.library.kether.ParsedAction
 import taboolib.module.kether.Kether
 import taboolib.module.kether.ScriptAction
@@ -48,7 +49,12 @@ object ActionProperty {
             val future = CompletableFuture<Void>()
             frame.newFrame(instance).run<Any>().thenApply { instance ->
                 if (instance == null) {
-                    warning("Property object must be not null.")
+                    warning(
+                        """
+                            属性对象不能为空。
+                            Property object must be not null.
+                        """.t()
+                    )
                     future.complete(null)
                 }
                 frame.newFrame(value).run<Any?>().thenAccept close@{ value ->
@@ -60,7 +66,13 @@ object ActionProperty {
                             return@close
                         }
                     }
-                    warning("${instance.javaClass.simpleName}[$key] not supported yet.")
+                    val prop = "${instance.javaClass.simpleName}[$key]"
+                    warning(
+                        """
+                            $prop 尚未支持。
+                            $prop not supported yet.
+                        """.t()
+                    )
                     future.complete(null)
                 }
             }
@@ -73,7 +85,12 @@ object ActionProperty {
         override fun run(frame: ScriptFrame): CompletableFuture<Any?> {
             return frame.newFrame(instance).run<Any>().thenApply {
                 if (it == null) {
-                    warning("Property object must be not null.")
+                    warning(
+                        """
+                            属性对象不能为空。
+                            Property object must be not null.
+                        """.t()
+                    )
                     return@thenApply null
                 }
                 val propertyList = getScriptProperty(it)
@@ -83,7 +100,13 @@ object ActionProperty {
                         return@thenApply result.value
                     }
                 }
-                warning("${it.javaClass.simpleName}[$key] not supported yet.")
+                val prop = "${instance.javaClass.simpleName}[$key]"
+                warning(
+                    """
+                        $prop 尚未支持。
+                        $prop not supported yet.
+                    """.t()
+                )
                 return@thenApply null
             }
         }

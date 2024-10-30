@@ -1,6 +1,5 @@
 package taboolib.common.env.legacy;
 
-import com.google.common.collect.Lists;
 import me.lucko.jarrelocator.JarRelocator;
 import me.lucko.jarrelocator.Relocation;
 import org.jetbrains.annotations.Nullable;
@@ -27,6 +26,8 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
+
+import static taboolib.common.PrimitiveIO.t;
 
 /**
  * 包含所有需要下载和注入依赖项到类路径的方法的类。
@@ -119,7 +120,11 @@ public class DependencyDownloader extends AbstractXmlParser {
             // 如果文件存在
             if (file.exists()) {
                 // 提示信息
-                PrimitiveIO.println("Loading library {0}:{1}:{2}", dep.getGroupId(), dep.getArtifactId(), dep.getVersion());
+                PrimitiveIO.println(t("加载依赖 {0}:{1}:{2}", "Loading library {0}:{1}:{2}"),
+                        dep.getGroupId(),
+                        dep.getArtifactId(),
+                        dep.getVersion()
+                );
                 // 如果没有重定向规则，直接注入
                 if (relocation.isEmpty()) {
                     ClassLoader loader = ClassAppender.addPath(file.toPath(), PrimitiveSettings.IS_ISOLATED_MODE, dep.isExternal());
@@ -132,7 +137,7 @@ public class DependencyDownloader extends AbstractXmlParser {
                     if (!rel.exists() || rel.length() == 0) {
                         try {
                             // 提示信息
-                            PrimitiveIO.println("Relocating ...");
+                            PrimitiveIO.println(t("正在重定向 ...", "Relocating ..."));
                             // 获取重定向规则
                             List<Relocation> rules = relocation.stream().map(JarRelocation::toRelocation).collect(Collectors.toList());
                             // 获取临时文件

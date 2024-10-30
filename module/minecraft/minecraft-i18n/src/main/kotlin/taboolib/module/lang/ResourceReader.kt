@@ -8,6 +8,7 @@ import taboolib.common.platform.function.pluginId
 import taboolib.common.platform.function.submitAsync
 import taboolib.common.platform.function.warning
 import taboolib.common.util.replaceWithOrder
+import taboolib.common.util.t
 import taboolib.common5.FileWatcher
 import taboolib.library.configuration.ConfigurationSection
 import taboolib.module.configuration.Configuration
@@ -70,7 +71,13 @@ class ResourceReader(val clazz: Class<*>, val migrate: Boolean = true) {
                     }
                 }
             } else {
-                warning("Missing language file: $code.${fileName.substringAfterLast('.')}")
+                val file = "$code.${fileName.substringAfterLast('.')}"
+                warning(
+                    """
+                        未能找到语言文件: $file
+                        Missing language file: $file
+                    """.t()
+                )
             }
         }
     }
@@ -124,11 +131,21 @@ class ResourceReader(val clazz: Class<*>, val migrate: Boolean = true) {
             if (typeInstance != null) {
                 typeInstance.init(map)
             } else {
-                warning("Unsupported language type: $node > $type ($code)")
+                warning(
+                    """
+                        不支持的语言文件类型: $node > $type ($code)
+                        Unsupported language type: $node > $type ($code)
+                    """.t()
+                )
             }
             typeInstance
         } else {
-            warning("Missing language type: $map ($code)")
+            warning(
+                """
+                    语言文件类型缺失: $node ($code)
+                    Missing language type: $map ($code)
+                """.t()
+            )
             null
         }
     }

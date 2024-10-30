@@ -16,6 +16,7 @@ import java.util.Properties;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
+import static taboolib.common.PrimitiveIO.t;
 import static taboolib.common.PrimitiveSettings.*;
 
 /**
@@ -130,7 +131,11 @@ public class PrimitiveLoader {
         // 检查文件有效性
         if (!PrimitiveIO.validation(envFile, shaFile) || (IS_FORCE_DOWNLOAD_IN_DEV_MODE && IS_DEV_MODE && group.equals(TABOOLIB_GROUP))) {
             try {
-                PrimitiveIO.println("Downloading library {0}:{1}:{2}", group, name, version);
+                PrimitiveIO.println(t("正在下载依赖 {0}:{1}:{2}", "Downloading library {0}:{1}:{2}"),
+                        group,
+                        name,
+                        version
+                );
                 // 获取地址
                 String url = String.format("%s/%s/%s/%s/%s-%s.jar", repo, group.replace(".", "/"), name, version, name, version);
                 // 下载资源
@@ -143,7 +148,7 @@ public class PrimitiveLoader {
             }
             // 检查合法性
             if (!PrimitiveIO.validation(envFile, shaFile)) {
-                PrimitiveIO.println("Failed to download " + name + "-" + version + ".jar");
+                PrimitiveIO.println(t("无法下载 {0}-{1}.jar", "Failed to download {0}-{1}.jar"), name, version);
                 return false;
             }
         }
@@ -162,7 +167,7 @@ public class PrimitiveLoader {
     static void loadAll() throws Throwable {
         // 若未指定 TabooLib 版本，则跳过加载
         if (TABOOLIB_VERSION.equals("skip")) {
-            PrimitiveIO.println("TabooLib version is not specified, skip loading.");
+            PrimitiveIO.println(t("TabooLib 版本没有定义，将跳过加载。", "TabooLib version is not specified, skip loading."));
             return;
         }
         long time = TabooLib.execution(() -> {
@@ -172,7 +177,10 @@ public class PrimitiveLoader {
             // 如果 Kotlin 环境启动失败
             if (!TabooLib.isKotlinEnvironment()) {
                 String kotlinClass = "kotlin.Lazy";
-                throw new IllegalStateException("Failed to setup Kotlin environment. (" + kotlinClass + " not found)");
+                throw new IllegalStateException(t(
+                        "无法启动 Kotlin 环境。(未能找到 {0})",
+                        "Failed to setup Kotlin environment. (" + kotlinClass + " not found)"
+                ));
             }
             // 加载 util 注册 ClassAppender Callback 回调函数
             load(REPO_TABOOLIB, TABOOLIB_GROUP, "common-util", TABOOLIB_VERSION, IS_ISOLATED_MODE, true, rule);

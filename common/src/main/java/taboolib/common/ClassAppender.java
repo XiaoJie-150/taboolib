@@ -14,6 +14,8 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+import static taboolib.common.PrimitiveIO.t;
+
 /**
  * @author sky
  * @since 2020-04-12 22:39
@@ -35,7 +37,10 @@ public class ClassAppender {
             lookup = (MethodHandles.Lookup) unsafe.getObject(lookupBase, lookupOffset);
             // 如果第二个 IMPL_LOOKUP 没有找到，提示无法加载
             if (lookup == null) {
-                PrimitiveIO.println("Unsafe lookup not found, TabooLib will not work properly.");
+                PrimitiveIO.warning(t(
+                        "未能找到 Unsafe lookup，TabooLib 将无法正常工作。",
+                        "Unsafe lookup not found, TabooLib will not work properly."
+                ));
             }
         } catch (Throwable ignored) {
         }

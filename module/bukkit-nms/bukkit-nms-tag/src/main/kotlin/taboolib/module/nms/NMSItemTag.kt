@@ -2,6 +2,7 @@ package taboolib.module.nms
 
 import org.bukkit.Material
 import org.bukkit.inventory.ItemStack
+import taboolib.common.util.t
 import taboolib.common.util.unsafeLazy
 
 /**
@@ -118,7 +119,12 @@ abstract class NMSItemTag {
  */
 private fun ItemStack?.validation(): ItemStack {
     if (this == null || type == Material.AIR || type.name.endsWith("_AIR")) {
-        error("ItemStack must be not null.")
+        error(
+            """
+                ItemStack 不能为空。
+                ItemStack must be not null.
+            """.t()
+        )
     } else {
         return this
     }

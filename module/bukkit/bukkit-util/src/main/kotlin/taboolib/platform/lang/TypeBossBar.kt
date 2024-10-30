@@ -9,6 +9,7 @@ import taboolib.common.platform.*
 import taboolib.common.platform.function.submit
 import taboolib.common.platform.function.warning
 import taboolib.common.util.replaceWithOrder
+import taboolib.common.util.t
 import taboolib.common5.cdouble
 import taboolib.common5.clong
 import taboolib.module.lang.Language
@@ -39,10 +40,20 @@ class TypeBossBar : Type {
         method = source["method"]?.toString()?.uppercase() ?: "INCREASE"
         // 合法性检查
         if (text == null) {
-            warning("Missing BossBar text.")
+            warning(
+                """
+                    缺少 BossBar 文本。
+                    Missing BossBar text.
+                """.t()
+            )
         }
         if (method != "INCREASE" && method != "DECREASE") {
-            warning("Unknown method $method, use INCREASE or DECREASE.")
+            warning(
+                """
+                    未知的方法 $method，使用 INCREASE 或 DECREASE。
+                    Unknown method $method, use INCREASE or DECREASE.
+                """.t()
+            )
         }
     }
 

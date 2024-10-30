@@ -19,6 +19,7 @@ import taboolib.common.Inject
 import taboolib.common.platform.Ghost
 import taboolib.common.platform.event.EventPriority
 import taboolib.common.platform.event.SubscribeEvent
+import taboolib.common.util.t
 import taboolib.common.util.unsafeLazy
 import taboolib.module.nms.type.PlayerScoreboard
 import taboolib.module.nms.type.ChatColorFormat
@@ -445,7 +446,12 @@ class NMSScoreboardImpl : NMSScoreboard() {
     }
 
     private fun validateLineCount(line: Int): Int {
-        if (uniqueOwner.size < line) error("Lines size are larger than supported.")
+        if (uniqueOwner.size < line) error(
+            """
+                行数大于支持的最大行数。
+                Lines size are larger than supported.
+            """.t()
+        )
         return line
     }
 

@@ -26,6 +26,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import static taboolib.common.PrimitiveIO.t;
+
 public class RuntimeEnvDependency {
 
     private final String defaultLibrary = PrimitiveSettings.FILE_LIBS;
@@ -195,7 +197,13 @@ public class RuntimeEnvDependency {
         if (PrimitiveIO.validation(pomFile, pomFile1)) {
             downloader.loadDependencyFromInputStream(pomFile.toPath().toUri().toURL().openStream());
         } else {
-            PrimitiveIO.println("Downloading library {0}:{1}:{2} {3}", artifact.getGroupId(), artifact.getArtifactId(), artifact.getVersion(), transitive ? "(transitive)" : "");
+            PrimitiveIO.println(
+                    t("正在下载依赖 {0}:{1}:{2} {3}", "Downloading library {0}:{1}:{2} {3}"),
+                    artifact.getGroupId(),
+                    artifact.getArtifactId(),
+                    artifact.getVersion(),
+                    transitive ? t("(传递模式)", "(transitive)") : ""
+            );
             downloader.loadDependencyFromInputStream(new URL(repository + "/" + pomPath).openStream());
         }
         // 加载自身

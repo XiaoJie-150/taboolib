@@ -8,6 +8,7 @@ import taboolib.common.platform.command.component.CommandComponentDynamic
 import taboolib.common.platform.command.component.CommandComponentLiteral
 import taboolib.common.platform.function.adaptCommandSender
 import taboolib.common.util.getFirst
+import taboolib.common.util.t
 
 /**
  * TabooLib
@@ -74,7 +75,12 @@ data class CommandContext<T>(
      * @throws IllegalStateException 如果当前命令不支持新的命令解析器
      */
     fun hasOption(id: String): Boolean {
-        lineParser ?: error("This command does not support the new parser.")
+        lineParser ?: error(
+            """
+                这个命令不支持新的命令解析器。
+                This command does not support the new parser.
+            """.t()
+        )
         return lineParser.options.containsKey(id)
     }
 
@@ -85,7 +91,12 @@ data class CommandContext<T>(
      * @throws IllegalStateException 如果当前命令不支持新的命令解析器
      */
     fun option(vararg id: String): String? {
-        lineParser ?: error("This command does not support the new parser.")
+        lineParser ?: error(
+            """
+                这个命令不支持新的命令解析器。
+                This command does not support the new parser.
+            """.t()
+        )
         return id.getFirst { lineParser.options[it] }
     }
 
@@ -95,7 +106,12 @@ data class CommandContext<T>(
      * @throws IllegalStateException 如果当前命令不支持新的命令解析器
      */
     fun options(): Map<String, String> {
-        lineParser ?: error("This command does not support the new parser.")
+        lineParser ?: error(
+            """
+                这个命令不支持新的命令解析器。
+                This command does not support the new parser.
+            """.t()
+        )
         return lineParser.options
     }
 
@@ -130,7 +146,12 @@ data class CommandContext<T>(
      * @throws IllegalStateException 参数不存在
      */
     operator fun get(id: String): String {
-        return getOrNull(id) ?: error("Parameter $id not found.")
+        return getOrNull(id) ?: error(
+            """
+                参数 $id 不存在。
+                Parameter $id not found.
+            """.t()
+        )
     }
 
     /**
@@ -148,6 +169,7 @@ data class CommandContext<T>(
             }
             return if (find) compound.index else process(compound.parent ?: return -1)
         }
+
         val idx = process(currentComponent ?: return null)
         if (idx == -1) {
             return null

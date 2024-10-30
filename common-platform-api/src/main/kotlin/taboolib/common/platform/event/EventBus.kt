@@ -13,6 +13,7 @@ import taboolib.common.platform.Ghost
 import taboolib.common.platform.Platform
 import taboolib.common.platform.function.*
 import taboolib.common.util.optional
+import taboolib.common.util.t
 
 @Awake
 @Inject
@@ -44,7 +45,12 @@ class EventBus : ClassVisitor(-1) {
             if (listenType == null) {
                 // 忽略警告
                 if (!method.isAnnotationPresent(Ghost::class.java)) {
-                    warning("${method.parameter[0].name} not found, use @Ghost to turn off this warning")
+                    warning(
+                        """
+                            事件 ${method.parameter[0].name} 未能找到，可使用 @Ghost 关闭此警告。
+                            ${method.parameter[0].name} not found, use @Ghost to turn off this warning.
+                        """.t()
+                    )
                 }
                 return
             }
@@ -95,6 +101,7 @@ class EventBus : ClassVisitor(-1) {
             registerBungeeListener(listenType, level, ignoreCancelled) { invoke(obj, method, it) }
         }
     }
+
     private fun registerAfyBroker(method: ClassMethod, optionalBind: Class<*>?, event: ClassAnnotation, obj: Any?) {
         val annoLevel = event.property("level", -1)
         val level = if (annoLevel != 0) annoLevel else event.enum("priority", EventPriority.NORMAL).level
@@ -108,6 +115,7 @@ class EventBus : ClassVisitor(-1) {
             registerAfyBrokerListener(listenType, level, ignoreCancelled) { invoke(obj, method, it) }
         }
     }
+
     private fun registerVelocity(method: ClassMethod, optionalBind: Class<*>?, event: ClassAnnotation, obj: Any?) {
         val postOrder = event.enum("postOrder", PostOrder.NORMAL)
         val listenType = method.parameterTypes[0]

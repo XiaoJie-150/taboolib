@@ -14,6 +14,8 @@ import taboolib.common.platform.Plugin;
 import java.io.File;
 import java.util.concurrent.TimeUnit;
 
+import static taboolib.common.PrimitiveIO.t;
+
 /**
  * TabooLib
  * taboolib.platform.AfyBrokerPlugin
@@ -35,7 +37,13 @@ public class AfyBrokerPlugin extends net.afyer.afybroker.server.plugin.Plugin {
                 IsolatedClassLoader.init(AfyBrokerPlugin.class);
             } catch (Throwable ex) {
                 // 提示信息
-                PrimitiveIO.error("Failed to initialize primitive loader, the plugin \"{0}\" will be disabled!", PrimitiveIO.getRunningFileName());
+                PrimitiveIO.error(
+                        t(
+                                "无法初始化原始加载器，插件 \"{0}\" 将被禁用！",
+                                "Failed to initialize primitive loader, the plugin \"{0}\" will be disabled!"
+                        ),
+                        PrimitiveIO.getRunningFileName()
+                );
                 // 重抛错误
                 throw ex;
             }

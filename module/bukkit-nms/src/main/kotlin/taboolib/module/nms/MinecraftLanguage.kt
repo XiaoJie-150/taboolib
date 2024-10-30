@@ -15,6 +15,7 @@ import taboolib.common.platform.PlatformSide
 import taboolib.common.platform.function.info
 import taboolib.common.platform.function.warning
 import taboolib.common.util.MatrixList
+import taboolib.common.util.t
 import java.io.File
 import java.net.URL
 import java.util.*
@@ -141,7 +142,12 @@ object MinecraftLanguage {
         }
         // 检查本地文件是否有效
         if (!checkFiles()) {
-            info("Downloading Minecraft language files ...")
+            info(
+                """
+                    正在下载 Minecraft 语言文件 ...
+                    Downloading Minecraft language files ...
+                """.t()
+            )
             downloadFiles()
         }
         // 加载本地文件
@@ -203,7 +209,12 @@ object MinecraftLanguage {
                             if (file.exists() && file.length() > 0) {
                                 break
                             }
-                            PrimitiveIO.println("Downloading language ... $language")
+                            PrimitiveIO.println(
+                                """
+                                    正在下载语言文件 ... $language
+                                    Downloading language ... $language
+                                """.t()
+                            )
                             // 获取语言文件文本并写入本地文件
                             newFile(file).writeText(URL("$resourceUrl/${langHash.substring(0, 2)}/$langHash").readText())
                             break
@@ -213,7 +224,12 @@ object MinecraftLanguage {
                 return
             }
         }
-        warning("Minecraft language not found.")
+        PrimitiveIO.warning(
+            """
+                未能找到 Minecraft 语言文件。
+                Minecraft language not found.
+            """.t()
+        )
         // endregion
     }
 

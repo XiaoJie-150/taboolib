@@ -5,6 +5,7 @@ import taboolib.common.PrimitiveIO
 import taboolib.common.env.RuntimeEnv
 import taboolib.common.io.runningResources
 import taboolib.common.platform.function.warning
+import taboolib.common.util.t
 import taboolib.common.util.unsafeLazy
 import java.io.InputStream
 import java.util.*
@@ -185,7 +186,12 @@ class SpigotMapping(val combined: String, val fields: String) {
         val current: SpigotMapping? by unsafeLazy {
             val mappingJson = runningResources["mapping.json"]
             if (mappingJson == null) {
-                warning("Resource \"mapping.json\" not found.")
+                warning(
+                    """
+                        资源文件 "mapping.json" 未能找到。
+                        Resource "mapping.json" not found.
+                    """.t()
+                )
                 return@unsafeLazy null
             }
             // 获取当前运行版本

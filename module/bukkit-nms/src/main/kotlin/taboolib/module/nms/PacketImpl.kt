@@ -4,6 +4,7 @@ import org.tabooproject.reflex.Reflex.Companion.getProperty
 import org.tabooproject.reflex.Reflex.Companion.setProperty
 import taboolib.common.platform.function.warning
 import taboolib.common.util.orNull
+import taboolib.common.util.t
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
@@ -30,7 +31,12 @@ class PacketImpl(override var source: Any) : Packet() {
             }
             val find = MinecraftVersion.paperMapping.classMapMojangToSpigot[fullyName]?.substringAfterLast('.')
             if (find == null) {
-                warning("Cannot find spigot name for $fullyName.")
+                warning(
+                    """
+                        未能找到 $fullyName 的 Spigot 译名。
+                        Cannot find spigot name for $fullyName.
+                    """.t()
+                )
             }
             spigotNameCache[fullyName] = Optional.ofNullable(find)
             return find
