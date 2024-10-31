@@ -2,6 +2,7 @@
 
 package taboolib.module.nms
 
+import net.minecraft.network.chat.numbers.BlankFormat
 import net.minecraft.network.protocol.game.ClientboundResetScorePacket
 import net.minecraft.network.protocol.game.PacketPlayOutScoreboardScore
 import net.minecraft.network.protocol.game.PacketPlayOutScoreboardTeam
@@ -162,7 +163,11 @@ class NMSScoreboardImpl : NMSScoreboard() {
             packet.setProperty("method", 0)
             // 1.21
             if (MinecraftVersion.versionId >= 12005) {
-                packet.setProperty("numberFormat", Optional.empty<Any>())
+                packet.setProperty("numberFormat", Optional.of(BlankFormat()))
+            }
+            // 1.20.4
+            else if (MinecraftVersion.versionId >= 12004) {
+                packet.setProperty("numberFormat", BlankFormat())
             }
         } else {
             handle2DuplicatedPacket(player, packet, title)
@@ -189,7 +194,11 @@ class NMSScoreboardImpl : NMSScoreboard() {
                 packet.setProperty("method", 1)
                 // 1.21
                 if (MinecraftVersion.versionId >= 12005) {
-                    packet.setProperty("numberFormat", Optional.empty<Any>())
+                    packet.setProperty("numberFormat", Optional.of(BlankFormat()))
+                }
+                // 1.20.4
+                else if (MinecraftVersion.versionId >= 12004) {
+                    packet.setProperty("numberFormat", BlankFormat())
                 }
             }
             // region Legacy Version
