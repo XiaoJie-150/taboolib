@@ -47,23 +47,23 @@ object ProtocolHandler : OpenListener {
     private var instance: LightInjector? = null
 
     /**
-     * 当前所有启用数据包共享的 OpenContainer 缓存
-     * 当插件加载或卸载时，缓存会被更新
-     */
-    private var containers = listOf<OpenContainer>()
-
-    /**
-     * 更新 OpenContainer 缓存
-     */
-    private fun updateContainer() {
-        containers = getOpenContainers().filter { Exchanges.contains(PACKET_LISTENER + "/plugin/" + it.name) }
-    }
-
-    /**
      * 当前插件是否已经注入数据包监听器
      */
     fun isInjected(): Boolean {
         return instance != null
+    }
+
+    /**
+     * 当前所有启用数据包共享的 OpenContainer 缓存
+     * 当插件加载或卸载时，缓存会被更新
+     */
+    var containers = listOf<OpenContainer>()
+
+    /**
+     * 更新 OpenContainer 缓存
+     */
+    fun updateContainer() {
+        containers = getOpenContainers().filter { it.name != pluginId && Exchanges.contains(PACKET_LISTENER + "/plugin/" + it.name) }
     }
 
     /**
@@ -108,6 +108,7 @@ object ProtocolHandler : OpenListener {
     private fun injectPacketListener() {
         instance = LightInjectorImpl(BukkitPlugin.getInstance())
         Exchanges[PACKET_LISTENER] = pluginId
+        Exchanges["$PACKET_LISTENER/plugin/$pluginId"] = null
         updateContainer()
         debug("LightInjector initialized.")
     }
