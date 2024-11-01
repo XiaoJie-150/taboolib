@@ -4,6 +4,7 @@ import com.electronwill.nightconfig.core.CommentedConfig
 import com.electronwill.nightconfig.core.Config
 import com.electronwill.nightconfig.core.EnumGetMethod
 import org.tabooproject.reflex.Reflex.Companion.setProperty
+import taboolib.common.util.asList
 import taboolib.common.util.decodeUnicode
 import taboolib.common5.Coerce
 import taboolib.library.configuration.ConfigurationSection
@@ -66,6 +67,7 @@ open class ConfigSection(var root: Config, override val name: String = "", overr
             name = path.substringAfterLast('.')
             parent = getConfigurationSection(path.substringBeforeLast('.').substringAfterLast('.'))
         }
+        // @formatter:off
         return when (val value = root.getOrElse(path, def)) {
             is Config -> ConfigSection(value, name, parent)
             // 理论是无法获取到 Map 类型
@@ -77,9 +79,11 @@ open class ConfigSection(var root: Config, override val name: String = "", overr
             }
             else -> unwrap(value)
         }
+        // @formatter:on
     }
 
     override fun set(path: String, value: Any?) {
+        // @formatter:off
         when {
             value == null -> root.remove(path)
             value is List<*> -> root.set<Any>(path, unwrap(value, this))
@@ -96,6 +100,7 @@ open class ConfigSection(var root: Config, override val name: String = "", overr
             }
             else -> root.set<Any>(path, value)
         }
+        // @formatter:on
     }
 
     override fun getString(path: String): String? {
@@ -173,43 +178,47 @@ open class ConfigSection(var root: Config, override val name: String = "", overr
     }
 
     override fun getStringList(path: String): List<String> {
-        return getList(path)?.map { it.toString() }?.toList() ?: ArrayList()
+        return if (isList(path)) {
+            getList(path)?.map { it.toString() }?.toList() ?: emptyList()
+        } else {
+            get(path)?.asList() ?: emptyList()
+        }
     }
 
     override fun getIntegerList(path: String): List<Int> {
-        return getList(path)?.map { Coerce.toInteger(it) }?.toList() ?: ArrayList()
+        return getList(path)?.map { Coerce.toInteger(it) }?.toList() ?: emptyList()
     }
 
     override fun getBooleanList(path: String): List<Boolean> {
-        return getList(path)?.map { Coerce.toBoolean(it) }?.toList() ?: ArrayList()
+        return getList(path)?.map { Coerce.toBoolean(it) }?.toList() ?: emptyList()
     }
 
     override fun getDoubleList(path: String): List<Double> {
-        return getList(path)?.map { Coerce.toDouble(it) }?.toList() ?: ArrayList()
+        return getList(path)?.map { Coerce.toDouble(it) }?.toList() ?: emptyList()
     }
 
     override fun getFloatList(path: String): List<Float> {
-        return getList(path)?.map { Coerce.toFloat(it) }?.toList() ?: ArrayList()
+        return getList(path)?.map { Coerce.toFloat(it) }?.toList() ?: emptyList()
     }
 
     override fun getLongList(path: String): List<Long> {
-        return getList(path)?.map { Coerce.toLong(it) }?.toList() ?: ArrayList()
+        return getList(path)?.map { Coerce.toLong(it) }?.toList() ?: emptyList()
     }
 
     override fun getByteList(path: String): List<Byte> {
-        return getList(path)?.map { Coerce.toByte(it) }?.toList() ?: ArrayList()
+        return getList(path)?.map { Coerce.toByte(it) }?.toList() ?: emptyList()
     }
 
     override fun getCharacterList(path: String): List<Char> {
-        return getList(path)?.map { Coerce.toChar(it) }?.toList() ?: ArrayList()
+        return getList(path)?.map { Coerce.toChar(it) }?.toList() ?: emptyList()
     }
 
     override fun getShortList(path: String): List<Short> {
-        return getList(path)?.map { Coerce.toShort(it) }?.toList() ?: ArrayList()
+        return getList(path)?.map { Coerce.toShort(it) }?.toList() ?: emptyList()
     }
 
     override fun getMapList(path: String): List<Map<*, *>> {
-        return getList(path)?.filterIsInstance<Map<*, *>>()?.toList() ?: ArrayList()
+        return getList(path)?.filterIsInstance<Map<*, *>>()?.toList() ?: emptyList()
     }
 
     override fun getConfigurationSection(path: String): ConfigurationSection? {
