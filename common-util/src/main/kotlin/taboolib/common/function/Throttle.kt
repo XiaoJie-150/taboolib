@@ -1,16 +1,16 @@
 package taboolib.common.function
 
-import taboolib.common.Inject
-import taboolib.common.LifeCycle
-import taboolib.common.platform.Awake
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 
-abstract class ThrottleFunction<K>(protected val delay: Long) {
+abstract class ThrottleFunction<K : Any>(
+    val keyType: Class<K>,
+    val delay: Long,
+) {
 
-    protected val throttleMap = ConcurrentHashMap<K, Long>()
+    val throttleMap = ConcurrentHashMap<K, Long>()
 
-    protected fun canExecute(key: K): Boolean {
+    fun canExecute(key: K): Boolean {
         val currentTime = System.currentTimeMillis()
         val lastExecuteTime = throttleMap.getOrDefault(key, 0L)
         return if (currentTime - lastExecuteTime >= delay) {
@@ -19,7 +19,7 @@ abstract class ThrottleFunction<K>(protected val delay: Long) {
         } else false
     }
 
-    fun removeKey(key: K) {
+    fun removeKey(key: Any) {
         throttleMap.remove(key)
     }
 
@@ -27,7 +27,11 @@ abstract class ThrottleFunction<K>(protected val delay: Long) {
         throttleMap.clear()
     }
 
-    class Simple<K>(delay: Long, private val action: (K) -> Unit) : ThrottleFunction<K>(delay) {
+    class Simple<K : Any>(
+        keyType: Class<K>,
+        delay: Long,
+        val action: (K) -> Unit,
+    ) : ThrottleFunction<K>(keyType, delay) {
 
         init {
             addThrottleFunction(this)
@@ -38,7 +42,11 @@ abstract class ThrottleFunction<K>(protected val delay: Long) {
         }
     }
 
-    class Parameterized<K, T>(delay: Long, private val action: (K, T) -> Unit) : ThrottleFunction<K>(delay) {
+    class Parameterized<K : Any, T>(
+        keyType: Class<K>,
+        delay: Long,
+        val action: (K, T) -> Unit,
+    ) : ThrottleFunction<K>(keyType, delay) {
 
         init {
             addThrottleFunction(this)
@@ -49,17 +57,10 @@ abstract class ThrottleFunction<K>(protected val delay: Long) {
         }
     }
 
-    @Inject
     companion object {
 
         // 所有被创建的节流函数
-        private val allThrottleFunctions = CopyOnWriteArrayList<ThrottleFunction<*>>()
-
-        @Awake(LifeCycle.DISABLE)
-        private fun onDisable() {
-            // 清空列表
-            allThrottleFunctions.clear()
-        }
+        val allThrottleFunctions = CopyOnWriteArrayList<ThrottleFunction<*>>()
 
         // 添加节流函数到列表
         fun addThrottleFunction(throttleFunction: ThrottleFunction<*>) {
@@ -97,8 +98,8 @@ abstract class ThrottleFunction<K>(protected val delay: Long) {
  * @param delay 节流时间（单位：毫秒）
  * @param action 要执行的操作
  */
-fun <K> throttle(delay: Long, action: (K) -> Unit): ThrottleFunction.Simple<K> {
-    return ThrottleFunction.Simple(delay, action)
+inline fun <reified K : Any> throttle(delay: Long, noinline action: (K) -> Unit): ThrottleFunction.Simple<K> {
+    return ThrottleFunction.Simple(K::class.java, delay, action)
 }
 
 /**
@@ -132,6 +133,6 @@ fun <K> throttle(delay: Long, action: (K) -> Unit): ThrottleFunction.Simple<K> {
  * @param delay 节流时间（单位：毫秒）
  * @param action 要执行的操作
  */
-fun <K, T> throttle(delay: Long, action: (K, T) -> Unit): ThrottleFunction.Parameterized<K, T> {
-    return ThrottleFunction.Parameterized(delay, action)
+inline fun <reified K : Any, T> throttle(delay: Long, noinline action: (K, T) -> Unit): ThrottleFunction.Parameterized<K, T> {
+    return ThrottleFunction.Parameterized(K::class.java, delay, action)
 }

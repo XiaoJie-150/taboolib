@@ -1,21 +1,19 @@
 package taboolib.common.function
 
-import taboolib.common.Inject
-import taboolib.common.LifeCycle
-import taboolib.common.platform.Awake
 import taboolib.common.platform.function.isPrimaryThread
 import taboolib.common.platform.function.submit
 import taboolib.common.platform.service.PlatformExecutor
-import java.util.concurrent.*
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.CopyOnWriteArrayList
 
-abstract class DebounceFunction<K>(
-    protected val delay: Long,
-    protected val async: Boolean = false,
-    protected val autoShutdown: Boolean = true
+abstract class DebounceFunction<K : Any>(
+    val keyType: Class<K>,
+    val delay: Long,
+    val async: Boolean = false,
 ) {
-    protected val futureMap = ConcurrentHashMap<K, PlatformExecutor.PlatformTask>()
+    val futureMap = ConcurrentHashMap<K, PlatformExecutor.PlatformTask>()
 
-    fun removeKey(key: K) {
+    fun removeKey(key: Any) {
         futureMap.remove(key)?.cancel()
     }
 
@@ -28,12 +26,12 @@ abstract class DebounceFunction<K>(
         clearAll()
     }
 
-    class Simple<K>(
+    class Simple<K : Any>(
+        keyType: Class<K>,
         delay: Long,
         async: Boolean = false,
-        private val action: (K) -> Unit,
-        autoShutdown: Boolean = true
-    ) : DebounceFunction<K>(delay, async, autoShutdown) {
+        val action: (K) -> Unit,
+    ) : DebounceFunction<K>(keyType, delay, async) {
 
         init {
             addDebounceFunction(this)
@@ -46,12 +44,12 @@ abstract class DebounceFunction<K>(
         }
     }
 
-    class Parameterized<K, T>(
+    class Parameterized<K : Any, T>(
+        keyType: Class<K>,
         delay: Long,
         async: Boolean = false,
-        private val action: (K, T) -> Unit,
-        autoShutdown: Boolean = true
-    ) : DebounceFunction<K>(delay, async, autoShutdown) {
+        val action: (K, T) -> Unit,
+    ) : DebounceFunction<K>(keyType, delay, async) {
 
         init {
             addDebounceFunction(this)
@@ -64,20 +62,9 @@ abstract class DebounceFunction<K>(
         }
     }
 
-    @Inject
     companion object {
 
-        private val allDebounceFunctions = CopyOnWriteArrayList<DebounceFunction<*>>()
-
-        @Awake(LifeCycle.DISABLE)
-        private fun onDisable() {
-            allDebounceFunctions.forEach { debounceFunction ->
-                if (debounceFunction.autoShutdown) {
-                    debounceFunction.shutdown()
-                }
-            }
-            allDebounceFunctions.clear()
-        }
+        val allDebounceFunctions = CopyOnWriteArrayList<DebounceFunction<*>>()
 
         fun addDebounceFunction(debounceFunction: DebounceFunction<*>) {
             allDebounceFunctions.add(debounceFunction)
@@ -111,16 +98,14 @@ abstract class DebounceFunction<K>(
  * @param K 键类型（可以是 Player 或其他对象类型）
  * @param delay 防抖时间（单位：毫秒）
  * @param async 是否在异步线程执行，取决于当前线程
- * @param autoShutdown 是否在插件禁用时自动关闭执行器，默认为 true
  * @param action 要执行的操作
  */
-fun <K> debounce(
+inline fun <reified K : Any> debounce(
     delay: Long,
     async: Boolean = !isPrimaryThread,
-    autoShutdown: Boolean = true,
-    action: (K) -> Unit
+    noinline action: (K) -> Unit,
 ): DebounceFunction.Simple<K> {
-    return DebounceFunction.Simple(delay, async, action, autoShutdown)
+    return DebounceFunction.Simple(K::class.java, delay, async, action)
 }
 
 /**
@@ -151,14 +136,12 @@ fun <K> debounce(
  * @param T 参数类型
  * @param delay 防抖时间（单位：毫秒）
  * @param async 是否在异步线程执行，取决于当前线程
- * @param autoShutdown 是否在插件禁用时自动关闭执行器，默认为 true
  * @param action 要执行的操作
  */
-fun <K, T> debounce(
+inline fun <reified K : Any, T> debounce(
     delay: Long,
     async: Boolean = !isPrimaryThread,
-    autoShutdown: Boolean = true,
-    action: (K, T) -> Unit
+    noinline action: (K, T) -> Unit,
 ): DebounceFunction.Parameterized<K, T> {
-    return DebounceFunction.Parameterized(delay, async, action, autoShutdown)
+    return DebounceFunction.Parameterized(K::class.java, delay, async, action)
 }
