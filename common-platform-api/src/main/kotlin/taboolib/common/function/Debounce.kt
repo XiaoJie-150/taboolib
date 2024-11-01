@@ -3,61 +3,63 @@ package taboolib.common.function
 import taboolib.common.Inject
 import taboolib.common.LifeCycle
 import taboolib.common.platform.Awake
+import taboolib.common.platform.function.isPrimaryThread
+import taboolib.common.platform.function.submit
+import taboolib.common.platform.service.PlatformExecutor
 import java.util.concurrent.*
 
 abstract class DebounceFunction<K>(
     protected val delay: Long,
-    protected val executor: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor(),
+    protected val async: Boolean = false,
     protected val autoShutdown: Boolean = true
 ) {
-    protected val futureMap = ConcurrentHashMap<K, ScheduledFuture<*>>()
+    protected val futureMap = ConcurrentHashMap<K, PlatformExecutor.PlatformTask>()
 
     fun removeKey(key: K) {
-        futureMap.remove(key)?.cancel(false)
+        futureMap.remove(key)?.cancel()
     }
 
     fun clearAll() {
-        futureMap.values.forEach { it.cancel(false) }
+        futureMap.values.forEach { it.cancel() }
         futureMap.clear()
     }
 
     fun shutdown() {
         clearAll()
-        executor.shutdown()
     }
 
     class Simple<K>(
         delay: Long,
-        executor: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor(),
+        async: Boolean = false,
         private val action: (K) -> Unit,
         autoShutdown: Boolean = true
-    ) : DebounceFunction<K>(delay, executor, autoShutdown) {
+    ) : DebounceFunction<K>(delay, async, autoShutdown) {
 
         init {
             addDebounceFunction(this)
         }
 
         operator fun invoke(key: K) {
-            val future = executor.schedule({ action(key) }, delay, TimeUnit.MILLISECONDS)
-            futureMap[key]?.cancel(false)
+            val future = submit(async = async, delay = delay / 50) { action(key) }
+            futureMap[key]?.cancel()
             futureMap[key] = future
         }
     }
 
     class Parameterized<K, T>(
         delay: Long,
-        executor: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor(),
+        async: Boolean = false,
         private val action: (K, T) -> Unit,
         autoShutdown: Boolean = true
-    ) : DebounceFunction<K>(delay, executor, autoShutdown) {
+    ) : DebounceFunction<K>(delay, async, autoShutdown) {
 
         init {
             addDebounceFunction(this)
         }
 
         operator fun invoke(key: K, param: T) {
-            val future = executor.schedule({ action(key, param) }, delay, TimeUnit.MILLISECONDS)
-            futureMap[key]?.cancel(false)
+            val future = submit(async = async, delay = delay / 50) { action(key, param) }
+            futureMap[key]?.cancel()
             futureMap[key] = future
         }
     }
@@ -108,17 +110,17 @@ abstract class DebounceFunction<K>(
  *
  * @param K 键类型（可以是 Player 或其他对象类型）
  * @param delay 防抖时间（单位：毫秒）
- * @param executor 自定义的执行器，默认使用单线程调度执行器
+ * @param async 是否在异步线程执行，取决于当前线程
  * @param autoShutdown 是否在插件禁用时自动关闭执行器，默认为 true
  * @param action 要执行的操作
  */
 fun <K> debounce(
     delay: Long,
-    executor: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor(),
+    async: Boolean = !isPrimaryThread,
     autoShutdown: Boolean = true,
     action: (K) -> Unit
 ): DebounceFunction.Simple<K> {
-    return DebounceFunction.Simple(delay, executor, action, autoShutdown)
+    return DebounceFunction.Simple(delay, async, action, autoShutdown)
 }
 
 /**
@@ -148,15 +150,15 @@ fun <K> debounce(
  * @param K 键类型（可以是 Player 或其他对象类型）
  * @param T 参数类型
  * @param delay 防抖时间（单位：毫秒）
- * @param executor 自定义的执行器，默认使用单线程调度执行器
+ * @param async 是否在异步线程执行，取决于当前线程
  * @param autoShutdown 是否在插件禁用时自动关闭执行器，默认为 true
  * @param action 要执行的操作
  */
 fun <K, T> debounce(
     delay: Long,
-    executor: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor(),
+    async: Boolean = !isPrimaryThread,
     autoShutdown: Boolean = true,
     action: (K, T) -> Unit
 ): DebounceFunction.Parameterized<K, T> {
-    return DebounceFunction.Parameterized(delay, executor, action, autoShutdown)
+    return DebounceFunction.Parameterized(delay, async, action, autoShutdown)
 }
