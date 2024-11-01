@@ -103,7 +103,7 @@ abstract class DebounceFunction<K : Any>(
 inline fun <reified K : Any> debounce(
     delay: Long,
     async: Boolean = !isPrimaryThread,
-    noinline action: (K) -> Unit,
+    noinline action: (K) -> Unit = { _ -> },
 ): DebounceFunction.Simple<K> {
     return DebounceFunction.Simple(K::class.java, delay, async, action)
 }
@@ -141,7 +141,7 @@ inline fun <reified K : Any> debounce(
 inline fun <reified K : Any, T> debounce(
     delay: Long,
     async: Boolean = !isPrimaryThread,
-    noinline action: (K, T) -> Unit,
+    noinline action: (K, T) -> Unit = { _, _ -> },
 ): DebounceFunction.Parameterized<K, T> {
     return DebounceFunction.Parameterized(K::class.java, delay, async, action)
 }

@@ -13,7 +13,7 @@ import taboolib.common.platform.function.adaptPlayer
 
 @Inject
 @PlatformSide(Platform.VELOCITY)
-private class VelocityResources {
+internal object VelocityResources {
 
     @SubscribeEvent
     fun onQuit(e: DisconnectEvent) {

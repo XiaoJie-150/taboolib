@@ -98,7 +98,7 @@ abstract class ThrottleFunction<K : Any>(
  * @param delay 节流时间（单位：毫秒）
  * @param action 要执行的操作
  */
-inline fun <reified K : Any> throttle(delay: Long, noinline action: (K) -> Unit): ThrottleFunction.Simple<K> {
+inline fun <reified K : Any> throttle(delay: Long, noinline action: (K) -> Unit = { _ -> }): ThrottleFunction.Simple<K> {
     return ThrottleFunction.Simple(K::class.java, delay, action)
 }
 
@@ -133,6 +133,6 @@ inline fun <reified K : Any> throttle(delay: Long, noinline action: (K) -> Unit)
  * @param delay 节流时间（单位：毫秒）
  * @param action 要执行的操作
  */
-inline fun <reified K : Any, T> throttle(delay: Long, noinline action: (K, T) -> Unit): ThrottleFunction.Parameterized<K, T> {
+inline fun <reified K : Any, T> throttle(delay: Long, noinline action: (K, T) -> Unit = { _, _ -> }): ThrottleFunction.Parameterized<K, T> {
     return ThrottleFunction.Parameterized(K::class.java, delay, action)
 }

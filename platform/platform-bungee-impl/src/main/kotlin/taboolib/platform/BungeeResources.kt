@@ -13,7 +13,7 @@ import taboolib.common.platform.function.adaptPlayer
 
 @Inject
 @PlatformSide(Platform.BUNGEE)
-private class BukkitResources {
+internal object BungeeResources {
 
     @SubscribeEvent
     fun onQuit(e: PlayerDisconnectEvent) {
