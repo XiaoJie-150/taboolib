@@ -13,19 +13,32 @@ abstract class DebounceFunction<K : Any>(
 ) {
     val futureMap = ConcurrentHashMap<K, PlatformExecutor.PlatformTask>()
 
+    /**
+     * 移除指定键的防抖任务
+     * @param key 要移除的防抖任务的键
+     */
     fun removeKey(key: Any) {
         futureMap.remove(key)?.cancel()
     }
 
+    /**
+     * 清除所有防抖任务
+     * 取消所有正在执行的任务并清空任务映射表
+     */
     fun clearAll() {
         futureMap.values.forEach { it.cancel() }
         futureMap.clear()
     }
 
-    fun shutdown() {
-        clearAll()
-    }
-
+    /**
+     * 简单防抖函数类
+     *
+     * @param K 防抖函数键的类型
+     * @param keyType 键类型的 Class 对象
+     * @param delay 延迟执行的时间（毫秒）
+     * @param async 是否异步执行，默认为 false
+     * @param action 要执行的操作，接收一个类型为 K 的参数
+     */
     class Simple<K : Any>(
         keyType: Class<K>,
         delay: Long,
@@ -37,13 +50,29 @@ abstract class DebounceFunction<K : Any>(
             addDebounceFunction(this)
         }
 
-        operator fun invoke(key: K) {
+        /**
+         * 调用防抖函数
+         *
+         * @param key 防抖函数的键，用于标识不同的调用对象
+         * @param delay 延迟时间（毫秒），默认使用构造时设定的延迟时间
+         */
+        operator fun invoke(key: K, delay: Long = this.delay) {
             val future = submit(async = async, delay = delay / 50) { action(key) }
             futureMap[key]?.cancel()
             futureMap[key] = future
         }
     }
 
+    /**
+     * 带参数的防抖函数类
+     *
+     * @param K 防抖函数键的类型
+     * @param T 参数的类型
+     * @param keyType 键类型的 Class 对象
+     * @param delay 延迟执行的时间（毫秒）
+     * @param async 是否异步执行，默认为 false
+     * @param action 要执行的操作，接收一个类型为 K 的键和一个类型为 T 的参数
+     */
     class Parameterized<K : Any, T>(
         keyType: Class<K>,
         delay: Long,
@@ -55,7 +84,14 @@ abstract class DebounceFunction<K : Any>(
             addDebounceFunction(this)
         }
 
-        operator fun invoke(key: K, param: T) {
+        /**
+         * 调用带参数的防抖函数
+         *
+         * @param key 防抖函数的键，用于标识不同的调用对象
+         * @param param 传递给执行函数的参数
+         * @param delay 延迟时间（毫秒），默认使用构造时设定的延迟时间
+         */
+        operator fun invoke(key: K, param: T, delay: Long = this.delay) {
             val future = submit(async = async, delay = delay / 50) { action(key, param) }
             futureMap[key]?.cancel()
             futureMap[key] = future
@@ -73,8 +109,43 @@ abstract class DebounceFunction<K : Any>(
 }
 
 /**
+ * 创建一个简单的防抖函数：
+ * 不需要指定对象，直接执行操作。在指定时间内只执行一次函数，如果在这段时间内再次调用函数，则重新计时。
+ *
+ * 示例：
+ * ```kotlin
+ * // 创建一个 500 毫秒的防抖函数
+ * val debouncedAction = debounce(500) {
+ *     println("防抖后输出")
+ * }
+ *
+ * // 连续调用
+ * debouncedAction()
+ * debouncedAction() // 重置计时
+ * debouncedAction() // 重置计时
+ *
+ * // 等待 600 毫秒
+ * Thread.sleep(600)
+ *
+ * // 最终只会输出一次：
+ * // 防抖后输出
+ * ```
+ *
+ * @param delay 防抖时间（单位：毫秒）
+ * @param async 是否在异步线程执行，取决于当前线程
+ * @param action 要执行的操作
+ */
+fun debounce(
+    delay: Long,
+    async: Boolean = !isPrimaryThread,
+    action: () -> Unit = { },
+): DebounceFunction.Simple<Unit> {
+    return DebounceFunction.Simple(Unit::class.java, delay, async) { _ -> action() }
+}
+
+/**
  * 创建基础防抖函数：
- * 可以全局使用，也可以针对特定对象（如玩家）使用。在指定时间内只执行一次函数，如果在这段时间内再次调用函数，则重新计时。
+ * 针对特定对象（如玩家）使用。在指定时间内只执行一次函数，如果在这段时间内再次调用函数，则重新计时。
  *
  * 示例：
  * ```kotlin
@@ -110,7 +181,7 @@ inline fun <reified K : Any> debounce(
 
 /**
  * 创建带参数的防抖函数：
- * 可以全局使用，也可以针对特定对象（如玩家）使用。在指定时间内只执行一次函数，如果在这段时间内再次调用函数，则重新计时。
+ * 针对特定对象（如玩家）使用。在指定时间内只执行一次函数，如果在这段时间内再次调用函数，则重新计时。
  * 与基础版本不同的是，这个版本可以传递额外的参数。
  *
  * 示例：
