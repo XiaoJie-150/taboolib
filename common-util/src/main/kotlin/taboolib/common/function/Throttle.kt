@@ -20,7 +20,7 @@ abstract class ThrottleFunction<K : Any>(
      * @param delay 节流延迟时间（毫秒），默认使用构造时设定的延迟时间
      * @return 如果可以执行则返回 true，否则返回 false
      */
-    fun canExecute(key: K, delay: Long = this.delay): Boolean {
+    open fun canExecute(key: K, delay: Long = this.delay): Boolean {
         val currentTime = System.currentTimeMillis()
         val lastExecuteTime = throttleMap.getOrDefault(key, 0L)
         return if (currentTime - lastExecuteTime >= delay) {
@@ -56,8 +56,18 @@ abstract class ThrottleFunction<K : Any>(
         val action: () -> Unit,
     ) : ThrottleFunction<Unit>(Unit::class.java, delay) {
 
+        private var lastExecuteTime = 0L
+
         init {
             addThrottleFunction(this)
+        }
+
+        override fun canExecute(key: Unit, delay: Long): Boolean {
+            val currentTime = System.currentTimeMillis()
+            return if (currentTime - lastExecuteTime >= delay) {
+                lastExecuteTime = currentTime
+                true
+            } else false
         }
 
         /**
