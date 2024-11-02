@@ -46,6 +46,30 @@ abstract class ThrottleFunction<K : Any>(
     }
 
     /**
+     * 无键节流函数类
+     *
+     * @param delay 节流延迟时间（毫秒）
+     * @param action 要执行的操作，接收一个类型为 K 的参数
+     */
+    class Singleton(
+        delay: Long,
+        val action: () -> Unit,
+    ) : ThrottleFunction<Unit>(Unit::class.java, delay) {
+
+        init {
+            addThrottleFunction(this)
+        }
+
+        /**
+         * 调用节流函数
+         * @param delay 节流延迟时间（毫秒），默认使用构造时设定的延迟时间
+         */
+        operator fun invoke(delay: Long = this.delay) {
+            if (canExecute(Unit, delay)) action()
+        }
+    }
+
+    /**
      * 简单节流函数类
      *
      * @param K 节流函数键的类型
@@ -145,8 +169,8 @@ abstract class ThrottleFunction<K : Any>(
  * @param delay 节流时间（单位：毫秒）
  * @param action 要执行的操作
  */
-fun throttle(delay: Long, action: () -> Unit = { }): ThrottleFunction.Simple<Unit> {
-    return ThrottleFunction.Simple(Unit::class.java, delay) { _ -> action() }
+fun throttle(delay: Long, action: () -> Unit = { }): ThrottleFunction.Singleton {
+    return ThrottleFunction.Singleton(delay, action)
 }
 
 /**

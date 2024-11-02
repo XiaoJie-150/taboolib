@@ -31,6 +31,36 @@ abstract class DebounceFunction<K : Any>(
     }
 
     /**
+     * 无键防抖函数类
+     *
+     * @param delay 延迟执行的时间（毫秒）
+     * @param async 是否异步执行，默认为 false
+     * @param action 要执行的操作，接收一个类型为 K 的参数
+     */
+    class Singleton(
+        delay: Long,
+        async: Boolean = false,
+        val action: () -> Unit,
+    ) : DebounceFunction<Unit>(Unit::class.java, delay, async) {
+
+        var task: PlatformExecutor.PlatformTask? = null
+
+        init {
+            addDebounceFunction(this)
+        }
+
+        /**
+         * 调用防抖函数
+         * @param delay 延迟时间（毫秒），默认使用构造时设定的延迟时间
+         */
+        operator fun invoke(delay: Long = this.delay) {
+            val future = submit(async = async, delay = delay / 50) { action() }
+            task?.cancel()
+            task = future
+        }
+    }
+
+    /**
      * 简单防抖函数类
      *
      * @param K 防抖函数键的类型
@@ -139,8 +169,8 @@ fun debounce(
     delay: Long,
     async: Boolean = !isPrimaryThread,
     action: () -> Unit = { },
-): DebounceFunction.Simple<Unit> {
-    return DebounceFunction.Simple(Unit::class.java, delay, async) { _ -> action() }
+): DebounceFunction.Singleton {
+    return DebounceFunction.Singleton(delay, async, action)
 }
 
 /**
