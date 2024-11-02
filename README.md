@@ -7,27 +7,32 @@
 ![](https://img.shields.io/github/contributors/taboolib/taboolib)
 ![](https://img.shields.io/github/languages/code-size/taboolib/taboolib)
 
-TabooLib 正在进行底层重构，在新版本发布后，您可以参考迁移文档从 `6.1` 版本升级。   
-在此之前，您可以使用 `6.1.2-beta10` 在最高 `1.20.4` 版本下开发。
+TabooLib 正式创建于 2018/02/06, 为 Minecraft（Java 版）提供一个跨平台的插件开发框架，旨在替代频繁的操作，以及解决一些令人头疼的问题。
 
-**这个版本主要有哪些改动？**
++ 基于 `Kotlin` 独特的语法。
++ 仅占 `30+ KB` 插件体积。
++ 魔术般的工具。
 
-1. 更快的启动速度（包括依赖下载、类检索、类注入等）。
-2. 优化大量工具的底层逻辑。
-3. 规范项目结构。
-4. 优化配套插件。
-5. 优化 `application` 模块，以及支持在 IDEA 中直接运行。
-6. 支持 `1.21`。
-7. ...
+## 版本信息
 
-**哪些 API 受到了破坏性的影响？**
+| 构建版本                                                                                                                                                               | 发行时间                                                                                                                                                              | 发行者                                                                                                                                                                   | 插件版本                                                                                                                                                                            |
+|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ![](https://img.shields.io/badge/dynamic/json?label=Version&query=%24.tag_name&url=https%3A%2F%2Fapi.github.com%2Frepos%2FTabooLib%2FTabooLib%2Freleases%2Flatest) | ![](https://img.shields.io/badge/dynamic/json?label=Date&query=%24.created_at&url=https%3A%2F%2Fapi.github.com%2Frepos%2FTabooLib%2FTabooLib%2Freleases%2Flatest) | ![](https://img.shields.io/badge/dynamic/json?label=Author&query=%24.author.login&url=https%3A%2F%2Fapi.github.com%2Frepos%2FTabooLib%2FTabooLib%2Freleases%2Flatest) | ![](https://img.shields.io/badge/dynamic/json?label=Plugin&query=%24.tag_name&url=https%3A%2F%2Fapi.github.com%2Frepos%2FTabooLib%2Ftaboolib-gradle-plugin%2Freleases%2Flatest) |
 
-1. 以 `ClassVisitor` 为主的类注入 API，所有方法均有改动。
-2. 以 `ProjectScannerKt` 为主的类扫描 API。
-   1. 所有顶层字段的 `Class` 类型变更为 `ReflexClass`。
-   2. 移除顶层函数 `Class.getInstance(newInstance)`。
-   3. 移除顶层函数 `checkPlatform(Class)`。
-3. 移除 `@PlatformImplementation` 注解及相关 API。
+## 配套插件
 
-**哪些 API 被改名了？**
-1. `LocalFile` 更名为 `MinecraftLanguage`。
+可下载由 [kirraObj](https://github.com/CziSKY) 主导开发的 [IntelliJ IDEA 插件](https://github.com/TabooLib/taboolib-development)，快速创建项目。
+
+![](.assets/idea-plugin.png)
+
+## 相关链接
+
++ [TabooLib 版本迁移文档 (6.1 -> 6.2)](https://docs.tabooproject.org/migration/migration-6-1-to-6-2)
++ [TabooLib 主页](https://tabooproject.org)
++ [TabooLib 文档](https://docs.tabooproject.org)
++ [TabooLib 构件仓库](https://repo.tabooproject.org)
++ [TabooLib 非官方文档 (枫溪文档)](https://taboolib.feishu.cn/wiki/Lzf8wFEsfiHclskCuGkctoUNn9b)
+
+## 使用统计
+
+![](https://bstats.org/signatures/bukkit/taboolib-6.svg)
