@@ -2,7 +2,6 @@ package taboolib.common;
 
 import me.lucko.jarrelocator.JarRelocator;
 import me.lucko.jarrelocator.Relocation;
-import org.objectweb.asm.Opcodes;
 import taboolib.common.classloader.IsolatedClassLoader;
 
 import java.io.File;
@@ -40,8 +39,6 @@ public class PrimitiveLoader {
 
     static String projectPackageName;
 
-    static boolean isASM9 = isASM9();
-
     static {
         try {
             projectPackageName = "taboolib".substring(0, "taboolib".length() - 9);
@@ -56,12 +53,9 @@ public class PrimitiveLoader {
     static List<String[]> deps() {
         List<String[]> deps = new ArrayList<>();
         deps.add(new String[]{"me.lucko", "jar-relocator", "1.7"});
-        // 非 ASM 9 环境下加载 ASM 9
-        if (!isASM9) {
-            deps.add(new String[]{"org.ow2.asm", "asm", "9.6"});
-            deps.add(new String[]{"org.ow2.asm", "asm-util", "9.6"});
-            deps.add(new String[]{"org.ow2.asm", "asm-commons", "9.6"});
-        }
+        deps.add(new String[]{"org.ow2.asm", "asm", "9.6"});
+        deps.add(new String[]{"org.ow2.asm", "asm-util", "9.6"});
+        deps.add(new String[]{"org.ow2.asm", "asm-commons", "9.6"});
         return deps;
     }
 
@@ -72,10 +66,7 @@ public class PrimitiveLoader {
         ArrayList<String[]> rule = new ArrayList<>();
         rule.add(new String[]{TABOOPROJECT_GROUP, TABOOLIB_PACKAGE_NAME + ".library"});
         rule.add(new String[]{JR_GROUP + ".", JR_GROUP + "15."});
-        // 非 ASM 9 环境下重定向 ASM 9
-        if (!isASM9) {
-            rule.add(new String[]{ASM_GROUP + ".", ASM_GROUP + "9."});
-        }
+        rule.add(new String[]{ASM_GROUP + ".", ASM_GROUP + "9."});
         // 不跳过 TabooLib 重定向
         if (!SKIP_TABOOLIB_RELOCATE) {
             rule.add(new String[]{PrimitiveSettings.ID, TABOOLIB_PACKAGE_NAME});
@@ -96,7 +87,8 @@ public class PrimitiveLoader {
         long time = TabooLib.execution(() -> {
             // 基础依赖是否隔离加载
             boolean isIsolated = PrimitiveLoader.class.getClassLoader() instanceof IsolatedClassLoader;
-            // 加载基础依赖
+            // 在隔离空间加载基础依赖
+            // 用于引导 Env 启动
             for (String[] i : deps()) {
                 load(REPO_CENTRAL, i[0], i[1], i[2], isIsolated, true, new ArrayList<>());
             }
@@ -156,7 +148,7 @@ public class PrimitiveLoader {
         try {
             loadFile(envFile, isIsolated, isExternal, relocate, downloaded);
         } catch (Throwable ex) {
-            throw new IllegalStateException(ex);
+            throw new RuntimeException(t("无法加载 " + envFile, "Failed to load " + envFile), ex);
         }
         return true;
     }
@@ -226,7 +218,11 @@ public class PrimitiveLoader {
             // 文件为空 || 开发模式 || 强制重定向
             if ((!jar.exists() && jar.length() == 0) || (IS_FORCE_DOWNLOAD_IN_DEV_MODE && IS_DEV_MODE) || forceRelocate) {
                 jar.getParentFile().mkdirs();
-                new JarRelocator(PrimitiveIO.copyFile(file, File.createTempFile(file.getName(), ".jar")), jar, rel).run();
+                try {
+                    new JarRelocator(PrimitiveIO.copyFile(file, File.createTempFile(file.getName(), ".jar")), jar, rel).run();
+                } catch (Throwable e) {
+                    throw new RuntimeException(t("无法重定向 " + file, "Failed to relocate " + file), e);
+                }
             }
         }
         ClassLoader loader = ClassAppender.addPath(jar.toPath(), isIsolated, isExternal);
@@ -274,20 +270,6 @@ public class PrimitiveLoader {
             file.mkdirs();
         }
         return file;
-    }
-
-    /**
-     * 当前是否正在运行为 ASM 9 版本
-     */
-    static boolean isASM9() {
-        try {
-            Opcodes.class.getDeclaredField("ASM9");
-            Class.forName("org.objectweb.asm.util.Printer");
-            Class.forName("org.objectweb.asm.commons.Remapper");
-            return true;
-        } catch (Throwable ignored) {
-        }
-        return false;
     }
 
     static int deepHashCode(List<String[]> array) {
