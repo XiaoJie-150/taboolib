@@ -20,12 +20,6 @@ import taboolib.module.nms.MinecraftVersion
  */
 open class RemapTranslation : Remapper() {
 
-    /**
-     * 只匹配 1.17 之下的 nms 包名
-     */
-    val nms1 = "net/minecraft/server/v1_.*?/".toRegex()
-    val nms2 = "net/minecraft/server/${MinecraftVersion.minecraftVersion}/"
-
     val obc1 = "org/bukkit/craftbukkit/v1_.*?/".toRegex()
     val obc2 = "org/bukkit/craftbukkit/${MinecraftVersion.minecraftVersion}/"
     val obc3 = "org/bukkit/craftbukkit/"
@@ -61,7 +55,7 @@ open class RemapTranslation : Remapper() {
                 key
             }
         } else {
-            key.replace(nms1, nms2)
+            if (key.startsWith("net/minecraft/server/v1_")) "net/minecraft/server/${MinecraftVersion.minecraftVersion}/${key.substringAfterLast('/')}" else key
         }
     }
 
