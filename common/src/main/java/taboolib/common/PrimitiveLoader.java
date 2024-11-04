@@ -170,7 +170,7 @@ public class PrimitiveLoader {
             if (!TabooLib.isKotlinEnvironment()) {
                 String kotlinClass = "kotlin.Lazy";
                 throw new IllegalStateException(t(
-                        "无法启动 Kotlin 环境。(未能找到 {0})",
+                        "无法启动 Kotlin 环境。(未能找到 " + kotlinClass + ")",
                         "Failed to setup Kotlin environment. (" + kotlinClass + " not found)"
                 ));
             }
