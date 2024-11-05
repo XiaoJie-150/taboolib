@@ -5,7 +5,7 @@
 ## 范例代码
 
 ```kotlin
-submitChain {
+chain {
     // 等待 10 ticks
     wait(10)
     // 同步执行代码
