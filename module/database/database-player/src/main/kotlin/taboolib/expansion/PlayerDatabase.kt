@@ -54,12 +54,12 @@ abstract class PlayerDatabase {
 
     // 设置玩家对应的数据容器
     fun setupDataContainer(player: ProxyPlayer) {
-        dataContainer[player.uniqueId] = DataContainer(this.toString(), database!!)
+        dataContainer[player.uniqueId] = DataContainer(player.uniqueId.toString(), database!!)
     }
 
     // 设置 UUID 对应的数据容器
     fun setupDataContainer(uuid: UUID) {
-        dataContainer[uuid] = DataContainer(this.toString(), database!!)
+        dataContainer[uuid] = DataContainer(uuid.toString(), database!!)
     }
 
     // 获取 UUID 对应的数据容器
