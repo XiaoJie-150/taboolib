@@ -19,9 +19,8 @@ object TestDatabase : PlayerDatabase() {
      */
     @SubscribeEvent
     fun onJoin(ev: PlayerJoinEvent) {
-        val player = ev.player
         submitAsync {
-            QuestDatabase.setupDataContainer(adaptPlayer(player))
+            QuestDatabase.setupDataContainer(ev.player.uniqueId)
         }
     }
 
@@ -30,8 +29,7 @@ object TestDatabase : PlayerDatabase() {
      */
     @SubscribeEvent
     fun onQuit(ev: PlayerQuitEvent) {
-        val player = ev.player
-        QuestDatabase.releaseDataContainer(player)
+        QuestDatabase.releaseDataContainer(ev.player.uniqueId)
     }
 
 }
