@@ -1,6 +1,5 @@
 package taboolib.expansion
 
-import org.bukkit.entity.Player
 import taboolib.common.io.newFile
 import taboolib.common.platform.ProxyPlayer
 import taboolib.common.platform.function.disablePlugin
@@ -53,9 +52,14 @@ abstract class PlayerDatabase {
         dataContainer[uniqueId] = DataContainer(user, database!!)
     }
 
-    // 设置 UUID 对应的数据容器
+    // 设置玩家对应的数据容器
     fun setupDataContainer(player: ProxyPlayer) {
         dataContainer[player.uniqueId] = DataContainer(this.toString(), database!!)
+    }
+
+    // 设置 UUID 对应的数据容器
+    fun setupDataContainer(uuid: UUID) {
+        dataContainer[uuid] = DataContainer(this.toString(), database!!)
     }
 
     // 获取 UUID 对应的数据容器
@@ -69,7 +73,7 @@ abstract class PlayerDatabase {
     }
 
     // 释放玩家对应的数据容器
-    fun releaseDataContainer(player: Player) {
+    fun releaseDataContainer(player: ProxyPlayer) {
         dataContainer.remove(player.uniqueId)
     }
 
