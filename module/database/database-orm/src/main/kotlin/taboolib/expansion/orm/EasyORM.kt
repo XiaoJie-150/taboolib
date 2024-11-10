@@ -21,13 +21,20 @@ import taboolib.module.database.Host
 import java.io.Closeable
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import javax.sql.DataSource
 
 
 @Inject
 @Awake
 @RuntimeDependencies(
-    RuntimeDependency(value = "!com.j256.ormlite:ormlite-core:6.1"),
-    RuntimeDependency(value = "!com.j256.ormlite:ormlite-jdbc:6.1"),
+    RuntimeDependency(
+        value = "!com.j256.ormlite:ormlite-core:6.1",
+        relocate = ["!com.j256.ormlite", "!com.j256.ormlite_6_0"]
+    ),
+    RuntimeDependency(
+        value = "!com.j256.ormlite:ormlite-jdbc:6.1",
+        relocate = ["!com.j256.ormlite", "!com.j256.ormlite_6_0"]
+    ),
 )
 object EasyORM : ClassVisitor(0), Closeable {
 
@@ -43,6 +50,16 @@ object EasyORM : ClassVisitor(0), Closeable {
         databaseHost = host
         dataSource = Database.createDataSource(host, hikariConfig) as HikariDataSource
         connectionSource = DataSourceConnectionSource(dataSource, databaseHost.connectionUrl)
+        register()
+    }
+
+    /**
+     *  初始化数据库连接，应该在 Enable 及以前完成
+     *  dataSource 为已经创建好的数据源 HikariDataSource
+     */
+    fun init(dataSource: DataSource) {
+        this.dataSource = dataSource as HikariDataSource
+        this.connectionSource = DataSourceConnectionSource(dataSource, dataSource.jdbcUrl)
         register()
     }
 
