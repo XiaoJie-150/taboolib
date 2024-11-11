@@ -21,28 +21,48 @@ import taboolib.module.database.Host
 import java.io.Closeable
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import javax.sql.DataSource
 
 
 @Inject
 @Awake
 @RuntimeDependencies(
-    RuntimeDependency(value = "!com.j256.ormlite:ormlite-core:6.1"),
-    RuntimeDependency(value = "!com.j256.ormlite:ormlite-jdbc:6.1"),
+    RuntimeDependency(
+        value = "!com.j256.ormlite:ormlite-core:6.1",
+        test = "com.j256.ormlite.dao.Dao",
+        relocate = ["!com.j256.ormlite", "!com.j256.ormlite_6_1"]
+    ),
+    RuntimeDependency(
+        value = "!com.j256.ormlite:ormlite-jdbc:6.1",
+        test = "com.j256.ormlite.jdbc.DataSourceConnectionSource",
+        relocate = ["!com.j256.ormlite", "!com.j256.ormlite_6_1"]
+    ),
 )
 object EasyORM : ClassVisitor(0), Closeable {
 
     private lateinit var dataSource: HikariDataSource
-    lateinit var connectionSource: DataSourceConnectionSource
+    private lateinit var connectionSource: DataSourceConnectionSource
 
-    lateinit var databaseHost: Host<*>
+    private lateinit var databaseHost: Host<*>
 
     /**
      *  初始化数据库连接，应该在 Enable 及以前完成
      */
-    fun init(host: Host<*>, hikariConfig: HikariConfig? = null) {
+    fun init(host: Host<*>) {
+        val hikariConfig = Database.createHikariConfig(host)
         databaseHost = host
         dataSource = Database.createDataSource(host, hikariConfig) as HikariDataSource
-        connectionSource = DataSourceConnectionSource(dataSource, databaseHost.connectionUrl)
+        connectionSource = DataSourceConnectionSource(dataSource, host.connectionUrl)
+        register()
+    }
+
+    /**
+     *  初始化数据库连接，应该在 Enable 及以前完成
+     *  dataSource 为已经创建好的数据源 HikariDataSource
+     */
+    fun init(dataSource: DataSource) {
+        this.dataSource = dataSource as HikariDataSource
+        this.connectionSource = DataSourceConnectionSource(dataSource, dataSource.jdbcUrl)
         register()
     }
 
