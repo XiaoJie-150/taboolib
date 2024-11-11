@@ -39,17 +39,18 @@ import javax.sql.DataSource
 object EasyORM : ClassVisitor(0), Closeable {
 
     private lateinit var dataSource: HikariDataSource
-    lateinit var connectionSource: DataSourceConnectionSource
+    private lateinit var connectionSource: DataSourceConnectionSource
 
-    lateinit var databaseHost: Host<*>
+    private lateinit var databaseHost: Host<*>
 
     /**
      *  初始化数据库连接，应该在 Enable 及以前完成
      */
-    fun init(host: Host<*>, hikariConfig: HikariConfig? = null) {
+    fun init(host: Host<*>) {
+        val hikariConfig = Database.createHikariConfig(host)
         databaseHost = host
         dataSource = Database.createDataSource(host, hikariConfig) as HikariDataSource
-        connectionSource = DataSourceConnectionSource(dataSource, databaseHost.connectionUrl)
+        connectionSource = DataSourceConnectionSource(dataSource, host.connectionUrl)
         register()
     }
 
