@@ -40,6 +40,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static taboolib.common.PrimitiveIO.t;
+
 /**
  * @author md_5, sky
  * @since 2024/7/20 20:31
@@ -65,7 +67,7 @@ public class AetherResolver {
         this.session.setTransferListener(new AbstractTransferListener() {
             @Override
             public void transferStarted(@NotNull TransferEvent event) {
-                PrimitiveIO.println("Downloading {0}", event.getResource().getRepositoryUrl() + event.getResource().getResourceName());
+                PrimitiveIO.println(t("正在下载 {0}", "Downloading {0}"), event.getResource().getRepositoryUrl() + event.getResource().getResourceName());
             }
         });
         this.session.setReadOnly();

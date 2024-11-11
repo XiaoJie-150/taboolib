@@ -1,6 +1,7 @@
 package taboolib.module.chat.impl
 
 import net.md_5.bungee.api.ChatColor
+import taboolib.common.util.t
 import taboolib.module.chat.*
 import java.awt.Color
 
@@ -60,12 +61,22 @@ open class TextBlock(val level: Int, val properties: MutableMap<String, Property
             properties.containsKey("selector") || properties.containsKey("select") -> rawMessage.appendSelector(newText)
             // 分数
             properties["score"] != null -> {
-                val obj = properties["objective", "obj"] ?: error("Missing objective for score.")
+                val obj = properties["objective", "obj"] ?: error(
+                    """
+                        缺少 "objective" 参数。
+                        Missing objective for score.
+                    """.t()
+                )
                 rawMessage.appendScore(newText, transfer(obj))
             }
             // 渐变
             properties["gradient", "g"] != null -> {
-                val color = properties["gradient", "g"] ?: error("Missing color for gradient.")
+                val color = properties["gradient", "g"] ?: error(
+                    """
+                        缺少 "gradient" 参数。
+                        Missing color for gradient.
+                    """.t()
+                )
                 rawMessage.append(newText.toGradientColor(transfer(color).split(',').map { it.parseToHexColor() }))
             }
             // 语言文件
@@ -123,9 +134,19 @@ open class TextBlock(val level: Int, val properties: MutableMap<String, Property
                 }
                 // 颜色
                 "c", "color" -> {
-                    val color = value?.toString() ?: error("Missing color.")
+                    val color = value?.toString() ?: error(
+                        """
+                            缺少颜色参数。
+                            Missing color.
+                        """.t()
+                    )
                     if (color.length == 1) {
-                        rawMessage.color(ChatColor.getByChar(color[0])?.color ?: error("Invalid color code: ${color[0]}"))
+                        rawMessage.color(ChatColor.getByChar(color[0])?.color ?: error(
+                            """
+                                无效的颜色代码: ${color[0]}
+                                Invalid color code: ${color[0]}
+                            """.t()
+                        ))
                     } else {
                         rawMessage.color(Color(color.parseToHexColor()))
                     }

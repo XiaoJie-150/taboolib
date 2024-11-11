@@ -5,7 +5,6 @@ import org.tabooproject.reflex.ReflexClass
 import taboolib.common.Inject
 import taboolib.common.LifeCycle
 import taboolib.common.PrimitiveIO
-import taboolib.common.PrimitiveSettings
 import taboolib.common.env.RuntimeDependencies
 import taboolib.common.env.RuntimeDependency
 import taboolib.common.inject.ClassVisitor
@@ -14,7 +13,6 @@ import taboolib.common.platform.PlatformFactory
 import taboolib.common.platform.function.releaseResourceFile
 import taboolib.common.util.unsafeLazy
 import taboolib.common5.FileWatcher
-import java.util.function.Supplier
 
 @RuntimeDependencies(
     RuntimeDependency(
@@ -81,14 +79,12 @@ class ConfigLoader : ClassVisitor(1) {
                 }
                 val configFile = ConfigNodeFile(conf, file)
                 conf.onReload {
-                    val loader = PlatformFactory.getAPI<ConfigNodeLoader>()
+                    val loader = PlatformFactory.getAPI<ConfigNodeLoader>(ConfigNodeLoader::class.java.name)
                     configFile.nodes.forEach { loader.visit(it, owner) }
                 }
                 files[name] = configFile
                 // 开发模式
-                if (PrimitiveSettings.IS_DEBUG_MODE) {
-                    PrimitiveIO.println("Loaded config file: ${file.absolutePath}")
-                }
+                PrimitiveIO.debug("Loaded config file: ${file.absolutePath}")
             }
         }
     }

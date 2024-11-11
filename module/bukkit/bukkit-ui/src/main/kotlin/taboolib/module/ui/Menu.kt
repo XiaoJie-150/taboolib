@@ -1,6 +1,7 @@
 package taboolib.module.ui
 
 import org.bukkit.inventory.Inventory
+import taboolib.common.util.t
 import taboolib.module.ui.type.*
 import taboolib.module.ui.type.impl.*
 import java.util.concurrent.ConcurrentHashMap
@@ -32,7 +33,12 @@ interface Menu {
 
         /** 获取实现 */
         fun getImplementation(clazz: Class<*>): Class<*> {
-            return impl[clazz] ?: error("Cannot find implementation for ${clazz.name}")
+            return impl[clazz] ?: error(
+                """
+                    未能找到 ${clazz.name} 的实现。
+                    Cannot find implementation for ${clazz.name}
+                """.t()
+            )
         }
     }
 }

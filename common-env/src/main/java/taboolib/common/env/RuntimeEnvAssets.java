@@ -15,6 +15,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipFile;
 
+import static taboolib.common.PrimitiveIO.t;
+
 public class RuntimeEnvAssets {
 
     private final String defaultAssets = PrimitiveSettings.FILE_ASSETS;
@@ -64,7 +66,7 @@ public class RuntimeEnvAssets {
         if (!file.getParentFile().exists()) {
             file.getParentFile().mkdirs();
         }
-        PrimitiveIO.println("Downloading assets " + url.substring(url.lastIndexOf('/') + 1));
+        PrimitiveIO.println(t("正在下载资源 ... {0}", "Downloading assets ... {0}"), url.substring(url.lastIndexOf('/') + 1));
         if (zip) {
             File cacheFile = new File(file.getParentFile(), file.getName() + ".zip");
             PrimitiveIO.downloadFile(new URL(url + ".zip"), cacheFile);

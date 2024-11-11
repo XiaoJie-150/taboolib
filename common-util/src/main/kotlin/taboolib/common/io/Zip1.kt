@@ -45,10 +45,10 @@ fun File.unzip(destDirPath: String) {
     ZipFile(this).use { zipFile ->
         zipFile.stream().forEach { entry ->
             if (entry.isDirectory) {
-                File(destDirPath + "/" + entry.name).mkdirs()
+                newFile(destDirPath + "/" + entry.name).mkdirs()
             } else {
                 zipFile.getInputStream(entry).use {
-                    File(destDirPath + "/" + entry.name).writeBytes(it.readBytes())
+                    newFile(destDirPath + "/" + entry.name).writeBytes(it.readBytes())
                 }
             }
         }

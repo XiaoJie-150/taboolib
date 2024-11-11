@@ -11,6 +11,8 @@ import taboolib.common.platform.Platform
 import taboolib.common.platform.PlatformSide
 import taboolib.common.platform.function.disablePlugin
 import taboolib.common.platform.function.runningPlatform
+import taboolib.common.platform.function.warning
+import taboolib.common.util.t
 import taboolib.common.util.unsafeLazy
 import taboolib.module.nms.remap.RemapReflexPaper
 import taboolib.module.nms.remap.RemapReflexSpigot
@@ -76,7 +78,7 @@ object MinecraftVersion {
         arrayOf("1.18", "1.18.1", "1.18.2"),                                             // 10
         arrayOf("1.19", "1.19.1", "1.19.2", "1.19.3", "1.19.4"),                         // 11
         arrayOf("1.20", "1.20.1", "1.20.2", "!1.20.3", "1.20.4", "!1.20.5", "1.20.6"),   // 12 (跳过 1.20.3、1.20.5) NOTICE 从 1.20.5 开始, paper 进行了破坏性修改
-        arrayOf("1.21", "1.21.1")                                                        // 13 (跳过 1.21)
+        arrayOf("!1.21", "1.21.1", "!1.21.2", "1.21.3")                                  // 13 (跳过 1.21 和 1.21.2)
         // @formatter:on
     )
 
@@ -134,6 +136,13 @@ object MinecraftVersion {
      */
     val isSupported by unsafeLazy {
         supportedVersion.flatten().contains(runningVersion)
+    }
+
+    /**
+     * 是否运行在一个被跳过的版本
+     */
+    val isSkipped by unsafeLazy {
+        supportedVersion.flatten().any { it.startsWith("!") && runningVersion == it.substring(1) }
     }
 
     /**
@@ -257,9 +266,24 @@ object MinecraftVersion {
     @Awake(LifeCycle.LOAD)
     private fun init() {
         if (!isSupported) {
+            // 是否运行在一个被跳过的版本，将予以特殊的提示信息
+            if (isSkipped) {
+                warning(
+                    """
+                    当前 Minecraft 版本已跳过支持，通常由于 Mojang 官方发布了紧急修复版本。
+                    The current Minecraft version has been skipped for support, usually due to an emergency fix released by Mojang.
+                    """.t()
+                )
+            } else {
+                warning(
+                    """
+                    当前 Minecraft 版本不受支持，请等待插件适配。
+                    The current Minecraft version is not supported, please wait for the plugin to be adapted.
+                    """.t()
+                )
+            }
             // 仅在非开发模式下禁用插件
             if (!isDevelopmentMode) disablePlugin()
-            error("Unsupported Minecraft version, plugin disabled")
         }
         // 在 Bukkit 平台下，注册 Reflex 重定向实现
         if (runningPlatform == Platform.BUKKIT) {

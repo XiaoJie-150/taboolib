@@ -6,10 +6,8 @@ import taboolib.module.configuration.Configuration
 /**
  * 将任意 [Map] 或 [Configuration] 转换为 [Map<String, Any?>]
  */
-fun Any?.asMap(): Map<String, Any?> = when (this) {
-    is Map<*, *> -> entries.associate { it.key.toString() to it.value }
-    is ConfigurationSection -> getValues(false)
-    else -> emptyMap()
+fun Any?.asMap(): Map<String, Any?> {
+    return if (this != null) Configuration.parse(this).getValues(false) else emptyMap()
 }
 
 fun <V> ConfigurationSection.map(transform: (String, Any) -> V): Map<String, V> {
@@ -38,4 +36,24 @@ fun <V> ConfigurationSection.mapSection(node: String, transform: (ConfigurationS
 
 fun <T> ConfigurationSection.mapListAs(path: String, transform: (Map<String, Any?>) -> T): MutableList<T> {
     return getMapList(path).map { transform(it.asMap()) }.toMutableList()
+}
+
+/**
+ * 将左侧配置文件合并进入右侧配置文件，可以选择是否覆盖相同的节点。
+ */
+fun ConfigurationSection.mergeTo(section: ConfigurationSection, overwrite: Boolean = true): ConfigurationSection {
+    getKeys(false).forEach { key ->
+        // 如果当前节点是配置节，则递归合并
+        if (isConfigurationSection(key)) {
+            val value = getConfigurationSection(key)!!
+            val targetSection = section.getConfigurationSection(key) ?: section.createSection(key)
+            value.mergeTo(targetSection, overwrite)
+        } else {
+            // 否则直接覆盖
+            if (overwrite || !section.contains(key)) {
+                section[key] = get(key)
+            }
+        }
+    }
+    return section
 }

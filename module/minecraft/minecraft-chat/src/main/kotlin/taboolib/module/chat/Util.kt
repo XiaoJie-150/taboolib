@@ -2,6 +2,8 @@ package taboolib.module.chat
 
 import net.md_5.bungee.api.ChatColor
 import taboolib.common.platform.function.warning
+import taboolib.common.util.orNull
+import taboolib.common.util.t
 import kotlin.math.ceil
 
 const val EMPTY_TEXT = "{\"text\":\"\"}"
@@ -25,9 +27,7 @@ fun Int.mix(next: Int, d: Double): Int {
 /**
  * String 快速转 SimpleComponent
  */
-fun String.component(): SimpleComponent {
-    return Components.parseSimple(this)
-}
+fun String.component() = Components.parseSimple(this)
 
 /**
  * 对字符串上色
@@ -67,15 +67,15 @@ fun String.parseToHexColor(): Int {
     }
     // NAMED: white
     val knownColor = StandardColors.match(this)
-    if (knownColor.isPresent) {
-        // 没颜色的
-        if (knownColor.get().chatColor.color == null) {
-            warning("$this is not a color.")
-        } else {
-            knownColor.get().chatColor.color.rgb
-        }
+    if (knownColor.orNull()?.chatColor?.color != null) {
+        return knownColor.get().chatColor.color.rgb
     }
-    warning("Unknown color $this")
+    warning(
+        """
+        $this 不是一个颜色。
+        $this is not a color.
+        """.t()
+    )
     return 0
 }
 

@@ -2,6 +2,7 @@
 
 package taboolib.module.nms
 
+import net.minecraft.network.chat.numbers.BlankFormat
 import net.minecraft.network.protocol.game.ClientboundResetScorePacket
 import net.minecraft.network.protocol.game.PacketPlayOutScoreboardScore
 import net.minecraft.network.protocol.game.PacketPlayOutScoreboardTeam
@@ -19,6 +20,7 @@ import taboolib.common.Inject
 import taboolib.common.platform.Ghost
 import taboolib.common.platform.event.EventPriority
 import taboolib.common.platform.event.SubscribeEvent
+import taboolib.common.util.t
 import taboolib.common.util.unsafeLazy
 import taboolib.module.nms.type.PlayerScoreboard
 import taboolib.module.nms.type.ChatColorFormat
@@ -161,7 +163,11 @@ class NMSScoreboardImpl : NMSScoreboard() {
             packet.setProperty("method", 0)
             // 1.21
             if (MinecraftVersion.versionId >= 12005) {
-                packet.setProperty("numberFormat", Optional.empty<Any>())
+                packet.setProperty("numberFormat", Optional.of(BlankFormat()))
+            }
+            // 1.20.4
+            else if (MinecraftVersion.versionId >= 12004) {
+                packet.setProperty("numberFormat", BlankFormat())
             }
         } else {
             handle2DuplicatedPacket(player, packet, title)
@@ -188,7 +194,11 @@ class NMSScoreboardImpl : NMSScoreboard() {
                 packet.setProperty("method", 1)
                 // 1.21
                 if (MinecraftVersion.versionId >= 12005) {
-                    packet.setProperty("numberFormat", Optional.empty<Any>())
+                    packet.setProperty("numberFormat", Optional.of(BlankFormat()))
+                }
+                // 1.20.4
+                else if (MinecraftVersion.versionId >= 12004) {
+                    packet.setProperty("numberFormat", BlankFormat())
                 }
             }
             // region Legacy Version
@@ -445,7 +455,12 @@ class NMSScoreboardImpl : NMSScoreboard() {
     }
 
     private fun validateLineCount(line: Int): Int {
-        if (uniqueOwner.size < line) error("Lines size are larger than supported.")
+        if (uniqueOwner.size < line) error(
+            """
+                行数大于支持的最大行数。
+                Lines size are larger than supported.
+            """.t()
+        )
         return line
     }
 
@@ -520,25 +535,13 @@ class NMSScoreboardImpl : NMSScoreboard() {
                     player.sendPacket(PacketPlayOutScoreboardScore::class.java.invokeConstructor(uniqueOwner[i], objectiveName, i, null, null))
                     return@forEach
                 }
-                // 1.20.1, 1.20.2
-                if (MinecraftVersion.majorLegacy > 12000) {
-                    player.sendPacket(
-                        net.minecraft.server.v1_16_R3.PacketPlayOutScoreboardScore(
-                            net.minecraft.server.v1_16_R3.ScoreboardServer.Action.CHANGE,
-                            objectiveName,
-                            uniqueOwner[i], // 麻将小天才
-                            i
-                        )
-                    )
-                    return@forEach
-                }
                 // 1.13+ 直接实例化
                 if (MinecraftVersion.isHigherOrEqual(MinecraftVersion.V1_13)) {
                     player.sendPacket(
                         net.minecraft.server.v1_16_R3.PacketPlayOutScoreboardScore(
                             net.minecraft.server.v1_16_R3.ScoreboardServer.Action.CHANGE,
-                            uniqueOwner[i],
                             objectiveName,
+                            uniqueOwner[i],
                             i
                         )
                     )

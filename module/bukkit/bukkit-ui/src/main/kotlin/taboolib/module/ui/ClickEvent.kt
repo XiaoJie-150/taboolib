@@ -7,6 +7,7 @@ import org.bukkit.event.inventory.InventoryDragEvent
 import org.bukkit.event.inventory.InventoryInteractEvent
 import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.ItemStack
+import taboolib.common.util.t
 import taboolib.module.ui.type.Chest
 import taboolib.module.ui.virtual.RemoteInventory
 import taboolib.module.ui.virtual.VirtualInventoryInteractEvent
@@ -83,7 +84,12 @@ class ClickEvent(private val bukkitEvent: InventoryInteractEvent, val clickType:
     /** 转换为点击事件 */
     fun clickEvent(): InventoryClickEvent {
         if (clickType != ClickType.CLICK) {
-            error("clickEvent() is not available in \"$clickType\" action")
+            error(
+                """
+                    clickEvent() 无法在 "$clickType" 动作中使用。
+                    clickEvent() is not available in "$clickType" action.
+                """.t()
+            )
         }
         return bukkitEvent as InventoryClickEvent
     }
@@ -96,7 +102,12 @@ class ClickEvent(private val bukkitEvent: InventoryInteractEvent, val clickType:
     /** 转换为拖拽事件 */
     fun dragEvent(): InventoryDragEvent {
         if (clickType != ClickType.DRAG) {
-            error("dragEvent() is not available in \"$clickType\" action.")
+            error(
+                """
+                    dragEvent() 无法在 "$clickType" 动作中使用。
+                    dragEvent() is not available in "$clickType" action.
+                """.t()
+            )
         }
         return bukkitEvent as InventoryDragEvent
     }
@@ -109,7 +120,12 @@ class ClickEvent(private val bukkitEvent: InventoryInteractEvent, val clickType:
     /** 转换为虚拟点击事件 */
     fun virtualEvent(): RemoteInventory.ClickEvent {
         if (clickType != ClickType.VIRTUAL) {
-            error("virtualEvent() is not available in \"$clickType\" action.")
+            error(
+                """
+                    virtualEvent() 无法在 "$clickType" 动作中使用。
+                    virtualEvent() is not available in "$clickType" action.
+                """.t()
+            )
         }
         return (bukkitEvent as VirtualInventoryInteractEvent).clickEvent
     }

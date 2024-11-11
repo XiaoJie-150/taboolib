@@ -9,6 +9,7 @@ import org.bukkit.map.MapCanvas
 import org.bukkit.map.MapRenderer
 import org.bukkit.map.MapView
 import org.tabooproject.reflex.Reflex.Companion.getProperty
+import org.tabooproject.reflex.Reflex.Companion.invokeConstructor
 import org.tabooproject.reflex.Reflex.Companion.invokeMethod
 import org.tabooproject.reflex.Reflex.Companion.setProperty
 import org.tabooproject.reflex.Reflex.Companion.unsafeInstance
@@ -22,8 +23,10 @@ import java.awt.image.BufferedImage
 import java.io.File
 import java.lang.reflect.Array
 import java.net.URL
+import java.util.*
 import java.util.concurrent.CompletableFuture
 import javax.imageio.ImageIO
+import kotlin.collections.ArrayList
 
 /**
  * 创建地图画（堵塞）
@@ -190,7 +193,7 @@ fun BufferedImage.zoomed(width: Int = 128, height: Int = 128): BufferedImage {
 class NMSMap(val image: BufferedImage, var hand: Hand = Hand.MAIN, val builder: ItemBuilder.() -> Unit = {}) {
 
     enum class Hand {
-                    
+
         MAIN, OFF
     }
 
@@ -200,7 +203,20 @@ class NMSMap(val image: BufferedImage, var hand: Hand = Hand.MAIN, val builder: 
         val classPacketPlayOutMap = nmsClass("PacketPlayOutMap")
         val classCraftItemStack = obcClass("inventory.CraftItemStack")
         val classMapIcon by unsafeLazy { nmsClass("MapIcon") }
-        val classMapData: Class<*> by unsafeLazy { Class.forName("net.minecraft.world.level.saveddata.maps.WorldMap\$b") }
+        /**
+         * 鸣谢 [YsGqHY](https://github.com/YsGqHY) 提供的包寻找方法
+         */
+        val classMapData: Class<*> by unsafeLazy {
+            try {
+                // 尝试找Spigot的WorldMap.b
+                Class.forName("net.minecraft.world.level.saveddata.maps.WorldMap\$b")
+            } catch (e: ClassNotFoundException) {
+                // 没有找到Spigot的WorldMap.b，尝试找Paper的MapItemSavedData.MapPatch
+                Class.forName("net.minecraft.world.level.saveddata.maps.MapItemSavedData\$MapPatch")
+            }
+        }
+        // 高版本把MapId改成了，这个东西主要是对1.20+的兼容
+        val classMapId: Class<*> by unsafeLazy { Class.forName("net.minecraft.world.level.saveddata.maps.MapId") }
     }
 
     val mapRenderer = object : MapRenderer() {
@@ -266,6 +282,36 @@ class NMSMap(val image: BufferedImage, var hand: Hand = Hand.MAIN, val builder: 
             val buffer = mapView.invokeMethod<Any>("render", player)!!.getProperty<ByteArray>("buffer")
             val packet = classPacketPlayOutMap.unsafeInstance()
             when {
+                // 1.21+
+                MinecraftVersion.isHigherOrEqual(MinecraftVersion.V1_21) -> {
+                    // 1.21+这里被改成了MapId对象
+                    packet.setProperty("mapId", classMapId.invokeConstructor(mapView.id))
+                    packet.setProperty("scale", mapView.scale.value)
+                    packet.setProperty("locked", false)
+                    // 1.21+这里被Optional包裹了
+                    packet.setProperty("decorations", Optional.empty<List<Any>>())
+                    packet.setProperty("colorPatch", Optional.of(classMapData.unsafeInstance().also {
+                        it.setProperty("startX", 0)
+                        it.setProperty("startY", 0)
+                        it.setProperty("width", 128)
+                        it.setProperty("height", 128)
+                        it.setProperty("mapColors", buffer)
+                    }))
+                }
+                // 1.20+
+                MinecraftVersion.isHigherOrEqual(MinecraftVersion.V1_20) -> {
+                    packet.setProperty("mapId", mapView.id)
+                    packet.setProperty("scale", mapView.scale.value)
+                    packet.setProperty("locked", false)
+                    packet.setProperty("decorations", ArrayList<Any>())
+                    packet.setProperty("colorPatch", classMapData.unsafeInstance().also {
+                        it.setProperty("startX", 0)
+                        it.setProperty("startY", 0)
+                        it.setProperty("width", 128)
+                        it.setProperty("height", 128)
+                        it.setProperty("mapColors", buffer)
+                    })
+                }
                 // 1.17+
                 MinecraftVersion.isUniversal -> {
                     packet.setProperty("mapId", (mapItem.itemMeta as MapMeta).mapId)

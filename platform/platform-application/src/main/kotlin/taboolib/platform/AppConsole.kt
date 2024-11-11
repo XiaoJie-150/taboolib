@@ -110,6 +110,32 @@ object AppConsole : SimpleTerminalConsole(), ProxyCommandSender {
     }
 
     override fun sendMessage(message: String) {
-        info(message)
+        // 移除颜色代码
+        if (message.contains("§")) {
+            info(stripColor(message))
+        } else {
+            info(message)
+        }
+    }
+
+    fun stripColor(message: String): String {
+        val filteredMessage = StringBuilder()
+        var skip = false
+        for (char in message) {
+            if (char == '§') {
+                skip = true
+            } else if (skip) {
+                // 判断 § 后面的东西
+                if (char.isLetterOrDigit()) {
+                    skip = false
+                } else {
+                    filteredMessage.append('§').append(char)
+                    skip = false
+                }
+            } else {
+                filteredMessage.append(char)
+            }
+        }
+        return filteredMessage.toString()
     }
 }

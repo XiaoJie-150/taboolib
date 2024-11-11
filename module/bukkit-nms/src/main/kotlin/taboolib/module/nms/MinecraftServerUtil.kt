@@ -41,16 +41,7 @@ val isBukkitServerRunning: Boolean
  * 获取 MinecraftServer 实例
  */
 val minecraftServerObject: Any by unsafeLazy {
-    Bukkit.getServer().getProperty(
-        when (MinecraftVersion.major) {
-            // 1.8, 1.9, 1.10, 1.11, 1.12, 1.13 类型为：MinecraftServer
-            in MinecraftVersion.V1_8..MinecraftVersion.V1_13 -> "console"
-            // 1.14, 1.15, 1.16, 1.17, 1.18, 1.19, 1.20 类型为：DedicatedServer
-            in MinecraftVersion.V1_14..MinecraftVersion.V1_20 -> "console"
-            // 其他版本
-            else -> "console"
-        }
-    )!!
+    Bukkit.getServer().getProperty("console")!!
 }
 
 /**
@@ -87,8 +78,29 @@ fun <T> nmsProxy(clazz: Class<T>, bind: String = "{name}Impl", parent: List<Stri
     if (nmsProxyInstanceMap.containsKey(key)) {
         return nmsProxyInstanceMap[key] as T
     }
+    // 获取合适的构造函数并创建实例
+    fun <T> createInstance(clazz: Class<T>, parameters: Array<out Any>): T {
+        // 遍历所有构造函数
+        val constructors = clazz.declaredConstructors
+        for (constructor in constructors) {
+            val parameterTypes = constructor.parameterTypes
+            if (parameterTypes.size != parameters.size) continue
+            var isMatch = true
+            for (i in parameterTypes.indices) {
+                if (!parameterTypes[i].isAssignableFrom(parameters[i].javaClass)) {
+                    isMatch = false
+                    break
+                }
+            }
+            if (isMatch) {
+                constructor.isAccessible = true
+                return constructor.newInstance(*parameters) as T
+            }
+        }
+        throw NoSuchMethodException("没有找到匹配的构造函数: ${clazz.name}")
+    }
     // 获取代理类并实例化
-    val newInstance = nmsProxyClass(clazz, bind, parent).getDeclaredConstructor(*parameter.map { it.javaClass }.toTypedArray()).newInstance(*parameter)
+    val newInstance = createInstance(nmsProxyClass(clazz, bind, parent), parameter)
     // 缓存实例
     nmsProxyInstanceMap[key] = newInstance!!
     return newInstance

@@ -14,6 +14,8 @@ import java.net.URL;
 import java.text.ParseException;
 import java.util.Objects;
 
+import static taboolib.common.PrimitiveIO.t;
+
 /**
  * Represents a maven repository that artifacts can be downloaded from
  *
@@ -48,7 +50,7 @@ public class Repository extends AbstractXmlParser {
         // 构建 URL
         URL url = dep.getURL(this, ext);
         // 提示信息
-        PrimitiveIO.println("Downloading ... {0}", url);
+        PrimitiveIO.println(t("Downloading ... {0}", "正在下载 ... {0}"), url);
         // 下载文件
         PrimitiveIO.downloadFile(url, out);
         PrimitiveIO.downloadFile(dep.getURL(this, ext + ".sha1"), new File(out.getPath() + ".sha1"));
@@ -91,8 +93,6 @@ public class Repository extends AbstractXmlParser {
 
     @Override
     public String toString() {
-        return "Repository{" +
-                "url='" + url + '\'' +
-                '}';
+        return "Repository{" + "url='" + url + '\'' + '}';
     }
 }

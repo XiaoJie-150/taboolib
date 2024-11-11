@@ -92,6 +92,9 @@ public class IsolatedClassLoader extends URLClassLoader {
             // Check isolated classes and libraries before parent to:
             //   - prevent accessing classes of other plugins
             //   - prevent the usage of old patch classes (which stay in memory after reloading)
+            // 在检查父类加载器之前先检查隔离的类和库：
+            //   - 防止访问其他插件的类
+            //   - 防止使用旧的补丁类（这些类在重新加载后仍然存在于内存中）
             if (findClass == null && !excludedClasses.contains(name)) {
                 boolean flag = true;
                 for (String excludedPackage : excludedPackages) {

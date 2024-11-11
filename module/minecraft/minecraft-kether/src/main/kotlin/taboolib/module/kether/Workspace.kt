@@ -3,6 +3,7 @@ package taboolib.module.kether
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.MultimapBuilder
 import taboolib.common.platform.function.warning
+import taboolib.common.util.t
 import taboolib.common5.Coerce
 import taboolib.library.kether.ExitStatus
 import taboolib.library.kether.Quest
@@ -70,7 +71,12 @@ class Workspace(val file: File, val extension: String = ".ks", val namespace: Li
                         scriptMap[name] = loader.load(ScriptService, name, bytes, namespace)
                     }
                 } catch (e: Exception) {
-                    warning("Unexpected exception while parsing kether script:")
+                    warning(
+                        """
+                            解析 Kether 语句时发生了意外的异常：
+                            Unexpected exception while parsing kether script:
+                        """.t()
+                    )
                     e.localizedMessage?.split('\n')?.forEach { warning(it) }
                 }
             }

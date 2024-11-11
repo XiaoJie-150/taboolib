@@ -32,10 +32,11 @@ open class ItemTag : ItemTagData, MutableMap<String, ItemTagData> {
      * 注意，此方法会修改传入的物品
      *
      * @param item 要写入的物品
+     * @param onlyCustom 是否仅包含自定义数据（详见 1.20.5+ NBT 改动，在 1.20.4 及以下版本此参数无效）
      * @return 写入 [ItemTag] 后的物品（等价于传入的物品）
      */
-    open fun saveTo(item: ItemStack): ItemStack {
-        item.setItemMeta(item.setItemTag(this).itemMeta)
+    open fun saveTo(item: ItemStack, onlyCustom: Boolean = true): ItemStack {
+        item.setItemMeta(item.setItemTag(this, onlyCustom).itemMeta)
         return item
     }
 

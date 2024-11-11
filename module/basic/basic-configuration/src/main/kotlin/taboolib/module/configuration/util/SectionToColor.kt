@@ -10,7 +10,8 @@ import taboolib.module.chat.colored
  * @return 上色后的文本
  */
 fun ConfigurationSection.getStringColored(node: String): String? {
-    return runCatching { getString(node)?.colored() }.getOrElse { error("missing chat module (install(\"module-chat\"))") }
+    val string = getString(node) ?: return null
+    return runCatching { string.colored() }.getOrNull()
 }
 
 /**
@@ -20,5 +21,6 @@ fun ConfigurationSection.getStringColored(node: String): String? {
  * @return 上色后的文本
  */
 fun ConfigurationSection.getStringListColored(node: String): List<String> {
-    return getStringList(node).map { it.colored() }
+    val stringList = getStringList(node)
+    return runCatching { stringList.map { it.colored() } }.getOrElse { stringList }
 }

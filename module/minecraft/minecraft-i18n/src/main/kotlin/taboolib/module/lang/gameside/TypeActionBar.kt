@@ -23,20 +23,6 @@ class TypeActionBar : Type {
     override fun send(sender: ProxyCommandSender, vararg args: Any) {
         val newText = text.translate(sender, *args).replaceWithOrder(*args)
         if (sender is ProxyPlayer) {
-//            // 暂不支持
-//            if (Language.enableSimpleComponent) {
-//                // 仅限于 Bukkit
-//                if (runningPlatform == Platform.BUKKIT) {
-//                    try {
-//                        nmsProxy<NMSMessage>().sendRawActionBar(sender.cast(), newText.component().build().toRawMessage())
-//                    } catch (ex: NoClassDefFoundError) {
-//                        warning("RawActionBar requires module-nms")
-//                    }
-//                } else {
-//                    warning("RawActionBar is not supported on ${runningPlatform}.")
-//                    sender.sendRawMessage(newText)
-//                }
-//            }
             sender.sendActionBar(newText)
         } else {
             sender.sendMessage(newText)

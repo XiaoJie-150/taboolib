@@ -4,6 +4,7 @@ import org.bukkit.Bukkit
 import org.bukkit.event.Cancellable
 import org.bukkit.event.Event
 import org.bukkit.event.HandlerList
+import taboolib.common.PrimitiveIO.t
 
 @Suppress("SameReturnValue")
 open class BukkitProxyEvent : Event(!Bukkit.isPrimaryThread()), Cancellable {
@@ -25,7 +26,7 @@ open class BukkitProxyEvent : Event(!Bukkit.isPrimaryThread()), Cancellable {
         if (allowCancelled) {
             isCancelled = value
         } else {
-            error("Event cannot be cancelled.")
+            error(t("这个事件无法被取消。", "This event cannot be cancelled."))
         }
     }
 

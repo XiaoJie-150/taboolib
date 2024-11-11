@@ -1,5 +1,6 @@
 package taboolib.module.chat.impl
 
+import taboolib.common.util.t
 import taboolib.module.chat.ComponentText
 import taboolib.module.chat.Components
 import taboolib.module.chat.SimpleComponent
@@ -100,7 +101,12 @@ class DefaultSimpleComponent(val source: String): SimpleComponent {
                 if (i + 1 < source.length && source[i + 1] == '(') {
                     val end = findToRight(source, ')', i + 2)
                     if (end == -1) {
-                        error("Property not closed: $source (i: ${i + 2})")
+                        error(
+                            """
+                                属性缺少右侧封闭符号: $source (i: ${i + 2})
+                                Property not closed: $source (i: ${i + 2})
+                            """.t()
+                        )
                     }
                     // 解析属性
                     val props = split(';', source.substring(i + 2, end)).map { split('=', it) }.associate { args ->

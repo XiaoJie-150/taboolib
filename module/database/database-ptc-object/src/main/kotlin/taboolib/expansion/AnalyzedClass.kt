@@ -1,6 +1,7 @@
 package taboolib.expansion
 
 import org.tabooproject.reflex.Reflex.Companion.getProperty
+import taboolib.common.util.t
 import taboolib.common5.*
 import java.lang.reflect.Parameter
 import java.sql.ResultSet
@@ -18,7 +19,12 @@ import java.util.concurrent.ConcurrentHashMap
 class AnalyzedClass private constructor(val clazz: Class<*>) {
 
     /** 主构造器 */
-    private val primaryConstructor = clazz.declaredConstructors.firstOrNull { it.parameters.isNotEmpty() } ?: error("No primary constructor found for $clazz")
+    private val primaryConstructor = clazz.declaredConstructors.firstOrNull { it.parameters.isNotEmpty() } ?: error(
+        """
+        未找到 $clazz 的主构造器。
+        No primary constructor found for $clazz
+        """.t()
+    )
 
     /** 成员列表 */
     private val memberProperties = clazz.declaredFields.associateBy { it.name }
@@ -27,7 +33,12 @@ class AnalyzedClass private constructor(val clazz: Class<*>) {
 
     /** 成员列表 */
     val members = primaryConstructor.parameters.map {
-        val entry = mps.firstOrNull { e -> e.value.type == it.type } ?: error("No member found for $it in $clazz")
+        val entry = mps.firstOrNull { e -> e.value.type == it.type } ?: error(
+            """
+            在 $clazz 类中，未找到成员 ${it.name}。
+            No member found for $it in $clazz
+            """.t()
+        )
         mps.remove(entry)
         val final = entry.value.modifiers and 16 != 0
         AnalyzedClassMember(validation(it), entry.value.name, final)
@@ -50,15 +61,24 @@ class AnalyzedClass private constructor(val clazz: Class<*>) {
     init {
         val customs = members.filter { it.isCustomObject }
         if (customs.isNotEmpty()) {
-            // error("The following members are not supported: $customs")
             customs.forEach {
                 if (CustomTypeFactory.getCustomTypeByClass(it.returnType) == null) {
-                    error("Unsupported type ${it.returnType} for ${it.name} in $clazz")
+                    error(
+                        """
+                            在 ${clazz.simpleName} 类中，成员 ${it.name} 的类型 ${it.returnType} 不受支持。
+                            Unsupported type ${it.returnType} for ${it.name} in $clazz
+                        """.t()
+                    )
                 }
             }
         }
         if (members.count { it.isPrimary } > 1) {
-            error("The primary member only supports one, but found ${members.count { it.isPrimary }}")
+            error(
+                """
+                    在 ${clazz.simpleName} 类中，主成员只能有一个，但找到了 ${members.count { it.isPrimary }} 个。
+                    The primary member only supports one, but found ${members.count { it.isPrimary }}
+                """.t()
+            )
         }
         // 获取访问权限
         memberProperties.forEach { it.value.isAccessible = true }
@@ -66,13 +86,23 @@ class AnalyzedClass private constructor(val clazz: Class<*>) {
 
     /** 获取主成员值 */
     fun getPrimaryMemberValue(data: Any): Any {
-        val property = memberProperties[primaryMember?.propertyName.toString()] ?: error("Primary member \"$primaryMemberName\" not found in $clazz")
+        val property = memberProperties[primaryMember?.propertyName.toString()] ?: error(
+            """
+                主成员 "$primaryMemberName" 在 $clazz 中未找到。
+                Primary member "$primaryMemberName" not found in $clazz
+            """.t()
+        )
         return property.get(data)!!
     }
 
     /** 获取成员值 */
     fun getValue(data: Any, member: AnalyzedClassMember): Any {
-        val property = memberProperties[member.propertyName] ?: error("Member \"${member.name}\" not found in $clazz")
+        val property = memberProperties[member.propertyName] ?: error(
+            """
+                成员 "${member.name}" 在 $clazz 中未找到。
+                Member "${member.name}" not found in $clazz
+            """.t()
+        )
         return property.get(data)!!
     }
 
@@ -95,7 +125,12 @@ class AnalyzedClass private constructor(val clazz: Class<*>) {
                     member.isUUID -> UUID.fromString(obj.toString())
                     member.isEnum -> member.returnType.enumConstants.first { it.toString() == obj.toString() }
                     else -> {
-                        val customType = CustomTypeFactory.getCustomTypeByClass(member.returnType) ?: error("Unsupported type ${member.returnType} for ${member.name} in $clazz")
+                        val customType = CustomTypeFactory.getCustomTypeByClass(member.returnType) ?: error(
+                            """
+                            在 $clazz 类中，成员 ${member.name} 的类型 ${member.returnType} 不受支持。
+                            Unsupported type ${member.returnType} for ${member.name} in $clazz
+                            """.t()
+                        )
                         customType.deserialize(obj)
                     }
                 }
@@ -108,13 +143,23 @@ class AnalyzedClass private constructor(val clazz: Class<*>) {
     /** 创建实例 */
     fun <T> createInstance(map: Map<String, Any?>): T {
         return if (wrapperFunction != null) {
-            wrapperFunction.invoke(wrapperObjectInstance, BundleMapImpl(map)) ?: error("Failed to create instance for $clazz")
+            wrapperFunction.invoke(wrapperObjectInstance, BundleMapImpl(map)) ?: error(
+                """
+                无法创建 $clazz 实例。
+                Failed to create instance for $clazz
+                """.t()
+            )
         } else {
             val args = members.map { map[it.name] }
             try {
                 primaryConstructor.newInstance(*args.toTypedArray())
             } catch (ex: Throwable) {
-                error("Failed to create instance for $clazz ($args), map=$map")
+                error(
+                    """
+                    无法创建 $clazz 实例。($args, map=$map)
+                    Failed to create instance for $clazz. ($args, map=$map)
+                    """.t()
+                )
             }
         } as T
     }
@@ -123,7 +168,12 @@ class AnalyzedClass private constructor(val clazz: Class<*>) {
     fun validation(parameter: Parameter): Parameter {
         // 可变参数
         if (parameter.isVarArgs) {
-            error("Vararg parameters are not supported for $parameter")
+            error(
+                """
+                无法在 $parameter 上使用可变参数。
+                Vararg parameters are not supported for $parameter
+                """.t()
+            )
         }
         return parameter
     }

@@ -1,7 +1,6 @@
 package taboolib.common5;
 
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
-import org.apache.commons.lang3.tuple.Triple;
 import taboolib.common.Inject;
 import taboolib.common.LifeCycle;
 import taboolib.common.platform.Awake;
@@ -11,9 +10,8 @@ import taboolib.common.platform.SkipTo;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -29,98 +27,160 @@ import java.util.function.Consumer;
 @SkipTo(LifeCycle.ENABLE)
 public class FileWatcher implements Releasable {
 
-    public final static FileWatcher INSTANCE = new FileWatcher();
+    /**
+     * 文件监听器单例
+     */
+    public final static FileWatcher INSTANCE = new FileWatcher(500);
 
-    private final ScheduledExecutorService service = Executors.newScheduledThreadPool(1, new BasicThreadFactory.Builder().namingPattern("TConfigWatcherService-%d").build());
-    private final Map<WatchService, Triple<File, Object, Consumer<Object>>> map = new HashMap<>();
+    /**
+     * 定时执行服务，用于定期检查文件变动
+     */
+    private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(
+            1,
+            new BasicThreadFactory.Builder()
+                    .namingPattern("TConfigWatcherService-%d")
+                    .uncaughtExceptionHandler((t, e) -> e.printStackTrace())
+                    .build()
+    );
 
-    public FileWatcher() {
-        service.scheduleAtFixedRate(() -> {
-            synchronized (map) {
-                map.forEach((service, triple) -> {
-                    WatchKey key;
-                    while ((key = service.poll()) != null) {
-                        for (WatchEvent<?> watchEvent : key.pollEvents()) {
-                            if (triple.getLeft().getName().equals(Objects.toString(watchEvent.context()))) {
-                                triple.getRight().accept(triple.getMiddle());
-                            }
-                        }
-                        key.reset();
-                    }
-                });
-            }
-        }, 1000, 100, TimeUnit.MILLISECONDS);
+    /**
+     * 当前已注册的文件监听器列表
+     */
+    private final Map<File, FileListener> fileListenerMap = new ConcurrentHashMap<>();
+
+    /**
+     * 共享的 WatchService 实例
+     */
+    private final WatchService watchService;
+
+    public FileWatcher(int interval) {
+        try {
+            this.watchService = FileSystems.getDefault().newWatchService();
+            this.executorService.scheduleAtFixedRate(() -> fileListenerMap.forEach((file, listener) -> {
+                try {
+                    listener.poll();
+                } catch (Throwable ex) {
+                    ex.printStackTrace();
+                }
+            }), 1000, interval, TimeUnit.MILLISECONDS);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    public void addSimpleListener(File file, Runnable runnable) {
+    /**
+     * 添加简单的文件监听器
+     *
+     * @param file     要监听的文件
+     * @param runnable 文件变动时执行的操作
+     */
+    public void addSimpleListener(File file, Consumer<File> runnable) {
         addSimpleListener(file, runnable, false);
     }
 
-    public void addSimpleListener(File file, Runnable runnable, boolean runFirst) {
-        if (runFirst) {
-            runnable.run();
+    /**
+     * 添加简单的文件监听器
+     *
+     * @param file           要监听的文件
+     * @param runnable       文件变动时执行的操作
+     * @param runImmediately 是否在添加监听器时立即执行一次
+     */
+    public void addSimpleListener(File file, Consumer<File> runnable, boolean runImmediately) {
+        if (runImmediately) {
+            runnable.accept(file);
         }
         try {
-            addListener(file, null, obj -> runnable.run());
-        } catch (Throwable ignored) {
+            fileListenerMap.put(file, new FileListener(file, runnable, this));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
-    public void addOnListen(File file, Object obj, Consumer<Object> consumer) {
-        try {
-            WatchService service = FileSystems.getDefault().newWatchService();
-            file.getParentFile().toPath().register(service, StandardWatchEventKinds.ENTRY_MODIFY);
-            map.putIfAbsent(service, Triple.of(file, obj, consumer));
-        } catch (Throwable ignored) {
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T> void addListener(File file, T obj, Consumer<T> consumer) {
-        addOnListen(file, obj, (Consumer<Object>) consumer);
-    }
-
-    public boolean hasListener(File file) {
-        synchronized (map) {
-            return map.values().stream().anyMatch(t -> t.getLeft().getPath().equals(file.getPath()));
-        }
-    }
-
-    public void runListener(File file) {
-        synchronized (map) {
-            map.values().stream().filter(t -> t.getLeft().getPath().equals(file.getPath())).forEach(f -> f.getRight().accept(null));
-        }
-    }
-
+    /**
+     * 移除文件的监听器
+     *
+     * @param file 要移除监听的文件
+     */
     public void removeListener(File file) {
-        synchronized (map) {
-            map.entrySet().removeIf(entry -> {
-                if (entry.getValue().getLeft().getPath().equals(file.getPath())) {
-                    try {
-                        entry.getKey().close();
-                    } catch (IOException ignored) {
-                    }
-                    return true;
-                }
-                return false;
-            });
+        FileListener listener = fileListenerMap.remove(file);
+        if (listener != null) {
+            listener.cancel();
         }
     }
 
-    @SuppressWarnings("CallToPrintStackTrace")
-    public void unregisterAll() {
-        service.shutdown();
-        map.forEach((service, pair) -> {
-            try {
-                service.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        });
-    }
-
+    /**
+     * 释放资源
+     */
     @Override
     public void release() {
-        unregisterAll();
+        executorService.shutdown();
+        fileListenerMap.values().forEach(FileListener::cancel);
+    }
+
+    /**
+     * 监听器对象
+     */
+    static class FileListener {
+
+        final File file;
+        final Consumer<File> callback;
+        final FileWatcher fileWatcher;
+        final WatchKey watchKey;
+
+        FileListener(File file, Consumer<File> callback, FileWatcher fileWatcher) throws IOException {
+            this.file = file;
+            this.callback = callback;
+            this.fileWatcher = fileWatcher;
+            Path path;
+            if (file.isDirectory()) {
+                path = file.toPath();
+            } else {
+                path = file.getParentFile().toPath();
+            }
+            watchKey = path.register(
+                    fileWatcher.watchService,
+                    StandardWatchEventKinds.ENTRY_CREATE,
+                    StandardWatchEventKinds.ENTRY_DELETE,
+                    StandardWatchEventKinds.ENTRY_MODIFY
+            );
+        }
+
+        public void poll() {
+            watchKey.pollEvents().forEach(event -> {
+                if (event.context() instanceof Path) {
+                    Path path = (Path) event.context();
+                    Path fullPath = file.getParentFile().toPath().resolve(path);
+                    // 监听目录
+                    if (file.isDirectory()) {
+                        try {
+                            // 使用 relativize 检查路径关系，更加准确
+                            file.toPath().relativize(fullPath);
+                            callback.accept(fullPath.toFile());
+                        } catch (IllegalArgumentException ignored) {
+                            // 如果不是子路径，会抛出异常，直接忽略
+                        }
+                    }
+                    // 监听文件
+                    else if (isSameFile(fullPath, file.toPath())) {
+                        callback.accept(fullPath.toFile());  // 使用完整路径
+                    }
+                }
+            });
+        }
+
+        public boolean isSameFile(Path path1, Path path2) {
+            try {
+                // 使用 Files.isSameFile() 判断两个路径是否指向同一个文件
+                // 该方法会考虑符号链接等情况
+                return Files.isSameFile(path1, path2);
+            } catch (IOException e) {
+                // 如果出现 IO 异常则返回 false
+                return false;
+            }
+        }
+
+        public void cancel() {
+            watchKey.cancel();
+        }
     }
 }

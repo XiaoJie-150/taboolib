@@ -28,7 +28,12 @@ class ConfigNodeLoader : ClassVisitor(2) {
             }
             val file = ConfigLoader.files[bind]
             if (file == null) {
-                warning("$bind not defined: $field")
+                warning(
+                    """
+                        $bind 没有定义: $field
+                        $bind not defined: $field
+                    """.t()
+                )
                 return
             }
             file.nodes += field
@@ -36,7 +41,12 @@ class ConfigNodeLoader : ClassVisitor(2) {
             val bindNode = node.property("value", "").ifEmpty { field.name.substringBefore('$').toNode() }
             var data = file.configuration[bindNode]
             if (data == null) {
-                warning("$bindNode not found in $bind")
+                warning(
+                    """
+                        $bind 中未找到 $bindNode 节点。
+                        $bindNode not found in $bind.
+                    """.t()
+                )
                 return
             }
             // 类型转换工具

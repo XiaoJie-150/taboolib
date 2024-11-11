@@ -5,6 +5,7 @@ import taboolib.common.platform.ProxyCommandSender
 import taboolib.common.platform.command.CommandContext
 import taboolib.common.platform.service.PlatformCommand
 import taboolib.common.util.subList
+import taboolib.common.util.t
 
 @Suppress("DuplicatedCode")
 class CommandBase : CommandComponent(-1, false) {
@@ -13,7 +14,12 @@ class CommandBase : CommandComponent(-1, false) {
 
     internal var commandIncorrectSender: CommandUnknownNotify<*> =
         CommandUnknownNotify(ProxyCommandSender::class.java) { sender, _, _, _ ->
-            sender.sendMessage("§cIncorrect sender for command")
+            sender.sendMessage(
+                """
+                    §c不匹配的命令发送者类型。
+                    §cIncorrect sender for command.
+                """.t()
+            )
         }
 
     internal var commandIncorrectCommand: CommandUnknownNotify<*> =
@@ -36,10 +42,25 @@ class CommandBase : CommandComponent(-1, false) {
                 command.unknownCommand(context.sender(), str, state)
             } else {
                 when (state) {
-                    1 -> context.sender().sendMessage("§cUnknown or incomplete command, see below for error")
-                    2 -> context.sender().sendMessage("§cIncorrect argument for command")
+                    1 -> context.sender().sendMessage(
+                        """
+                            §c未知或不完整的命令，错误见下
+                            §cUnknown or incomplete command, see below for error
+                        """.t()
+                    )
+                    2 -> context.sender().sendMessage(
+                        """
+                            §c命令参数错误
+                            §cIncorrect argument for command
+                        """.t()
+                    )
                 }
-                context.sender().sendMessage("§7$str§r§c§o<--[HERE]")
+                context.sender().sendMessage(
+                    """
+                        §7$str§r§c§o<--[这里]
+                        §7$str§r§c§o<--[HERE]
+                    """.t()
+                )
             }
         }
 
@@ -54,7 +75,12 @@ class CommandBase : CommandComponent(-1, false) {
                 context.index = 0
                 // 缺少 execute 代码块
                 if (commandExecutor == null) {
-                    context.sender().sendMessage("§cEmpty command (no executor).")
+                    context.sender().sendMessage(
+                        """
+                            §c空命令（无执行器）。
+                            §cEmpty command (no executor).
+                        """.t()
+                    )
                 } else {
                     commandExecutor!!.exec(this, context, "")
                 }
@@ -82,7 +108,12 @@ class CommandBase : CommandComponent(-1, false) {
                         context.currentComponent = find
                         // 缺少 execute 代码块
                         if (find.commandExecutor == null) {
-                            context.sender().sendMessage("§cEmpty command (no executor).")
+                            context.sender().sendMessage(
+                                """
+                                    §c空命令（无执行器）。
+                                    §cEmpty command (no executor).
+                                """.t()
+                            )
                         } else {
                             find.commandExecutor!!.exec(this, context, context.self())
                         }
@@ -109,9 +140,9 @@ class CommandBase : CommandComponent(-1, false) {
             context.index = cur
             context.currentComponent = component
             // 获取当前输入参数
-            val args = context.realArgs[cur]
+            val current = context.realArgs[cur]
             // 检索节点
-            val find = component.findChildren(context, args)
+            val find = component.findChildren(context, current)
             if (find != null) {
                 context.currentComponent = find
             }
@@ -127,7 +158,7 @@ class CommandBase : CommandComponent(-1, false) {
                             else -> emptyList()
                         }
                     }
-                    suggest.filter { args.isEmpty() || it.startsWith(args, ignoreCase = true) }.ifEmpty { null }
+                    suggest.filter { current.isEmpty() || it.contains(current, ignoreCase = true) }.ifEmpty { null }
                 }
                 else -> null
             }

@@ -2,6 +2,7 @@ package taboolib.platform.type
 
 import net.md_5.bungee.api.plugin.Cancellable
 import net.md_5.bungee.api.plugin.Event
+import taboolib.common.PrimitiveIO.t
 import taboolib.platform.BungeePlugin
 
 open class BungeeProxyEvent : Event(), Cancellable {
@@ -19,7 +20,7 @@ open class BungeeProxyEvent : Event(), Cancellable {
         if (allowCancelled) {
             isCancelled = value
         } else {
-            error("Event cannot be cancelled.")
+            error(t("这个事件无法被取消。", "This event cannot be cancelled."))
         }
     }
 

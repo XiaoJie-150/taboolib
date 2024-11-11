@@ -13,6 +13,7 @@ import org.tabooproject.reflex.Reflex.Companion.setProperty
 import taboolib.common.UnsupportedVersionException
 import taboolib.common.platform.function.submit
 import taboolib.common.platform.function.warning
+import taboolib.common.util.t
 import taboolib.common.util.unsafeLazy
 import taboolib.module.nms.MinecraftVersion.V1_17
 import taboolib.module.nms.MinecraftVersion.V1_18
@@ -86,7 +87,12 @@ private val advancementsMap by unsafeLazy {
 @Deprecated("停止维护")
 fun Player.sendToast(icon: Material, message: String, frame: ToastFrame = ToastFrame.TASK, background: ToastBackground = ToastBackground.ADVENTURE) {
     if (MinecraftVersion.majorLegacy >= 12002) {
-        warning("\"sendToast\" is not supported in Minecraft 1.20.2")
+        warning(
+            """
+                "sendToast" 不再支持 Minecraft 1.20.2 及以上版本。
+                "sendToast" is not supported in Minecraft 1.20.2.
+            """.t()
+        )
         return
     }
     if (MinecraftVersion.isLower(MinecraftVersion.V1_13)) {

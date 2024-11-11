@@ -2,6 +2,7 @@ package taboolib.module.nms
 
 import org.bukkit.Material
 import org.bukkit.inventory.ItemStack
+import taboolib.common.util.t
 import taboolib.common.util.unsafeLazy
 
 /**
@@ -101,14 +102,14 @@ abstract class NMSItemTag {
          * 获取 [ItemStack] 的 NMS 副本
          */
         fun asNMSCopy(item: ItemStack): Any {
-            return nmsProxy<NMSItemTag>().getNMSCopy(item)
+            return instance.getNMSCopy(item)
         }
 
         /**
          * 获取 NMS 物品的 Bukkit 副本
          */
         fun asBukkitCopy(item: Any): ItemStack {
-            return nmsProxy<NMSItemTag>().getBukkitCopy(item)
+            return instance.getBukkitCopy(item)
         }
     }
 }
@@ -118,7 +119,12 @@ abstract class NMSItemTag {
  */
 private fun ItemStack?.validation(): ItemStack {
     if (this == null || type == Material.AIR || type.name.endsWith("_AIR")) {
-        error("ItemStack must be not null.")
+        error(
+            """
+                ItemStack 不能为空。
+                ItemStack must be not null.
+            """.t()
+        )
     } else {
         return this
     }

@@ -6,6 +6,7 @@ import org.bukkit.entity.Player
 import org.bukkit.event.inventory.InventoryCloseEvent
 import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.ItemStack
+import taboolib.common.util.t
 import taboolib.library.xseries.XMaterial
 import taboolib.module.ui.ClickEvent
 import taboolib.module.ui.ClickType
@@ -123,7 +124,12 @@ open class ChestImpl(override var title: String) : Chest {
      * 可选是否异步执行
      */
     override fun onBuild(async: Boolean, callback: (player: Player, inventory: Inventory) -> Unit) {
-        if (isOpened) error("Menu has been opened, cannot set build callback.")
+        if (isOpened) error(
+            """
+                页面已经打开，无法设置构建回调。
+                Menu has been opened, cannot set build callback again.
+            """.t()
+        )
         if (async) {
             val before = asyncBuildCallback
             asyncBuildCallback = { player, inventory ->
@@ -229,7 +235,12 @@ open class ChestImpl(override var title: String) : Chest {
      * 根据抽象符号设置物品
      */
     override fun set(slot: Char, itemStack: ItemStack) {
-        if (isOpened) error("Menu has been opened, cannot preset item.")
+        if (isOpened) error(
+            """
+                页面已经打开，无法预设物品。
+                Menu has been opened, cannot preset item.
+            """.t()
+        )
         items[slot] = itemStack
     }
 

@@ -31,8 +31,14 @@ subprojects {
         compileOnly("com.google.guava:guava:21.0")
         compileOnly("com.google.code.gson:gson:2.8.7")
         compileOnly("org.apache.commons:commons-lang3:3.5")
-        compileOnly("org.tabooproject.reflex:reflex:1.1.6")
-        compileOnly("org.tabooproject.reflex:analyser:1.1.6")
+        compileOnly("org.tabooproject.reflex:reflex:1.1.7")
+        compileOnly("org.tabooproject.reflex:analyser:1.1.7")
+        // 测试依赖
+        testImplementation(kotlin("stdlib"))
+        testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+        testImplementation("com.google.guava:guava:21.0")
+        testImplementation("com.google.code.gson:gson:2.8.7")
+        testImplementation("org.apache.commons:commons-lang3:3.5")
     }
 
     java {

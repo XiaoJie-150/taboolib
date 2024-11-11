@@ -4,11 +4,11 @@ package taboolib.module.lang
 
 import taboolib.common.io.newFile
 import taboolib.common.io.runningResourcesInJar
-import taboolib.common.platform.function.debug
 import taboolib.common.platform.function.pluginId
 import taboolib.common.platform.function.submitAsync
 import taboolib.common.platform.function.warning
 import taboolib.common.util.replaceWithOrder
+import taboolib.common.util.t
 import taboolib.common5.FileWatcher
 import taboolib.library.configuration.ConfigurationSection
 import taboolib.module.configuration.Configuration
@@ -16,7 +16,6 @@ import taboolib.module.configuration.SecuredFile
 import java.io.File
 import java.nio.charset.StandardCharsets
 import java.text.SimpleDateFormat
-import java.util.regex.Pattern
 
 /**
  * TabooLib
@@ -64,7 +63,7 @@ class ResourceReader(val clazz: Class<*>, val migrate: Boolean = true) {
                     files[code] = it
                     // 文件变动监听
                     if (isFileWatcherHook) {
-                        FileWatcher.INSTANCE.addSimpleListener(file) {
+                        FileWatcher.INSTANCE.addSimpleListener(file) { _ ->
                             it.nodes.clear()
                             loadNodes(sourceFile, it.nodes, code)
                             loadNodes(Configuration.loadFromFile(file), it.nodes, code)
@@ -72,7 +71,13 @@ class ResourceReader(val clazz: Class<*>, val migrate: Boolean = true) {
                     }
                 }
             } else {
-                warning("Missing language file: $code.${fileName.substringAfterLast('.')}")
+                val file = "$code.${fileName.substringAfterLast('.')}"
+                warning(
+                    """
+                        未能找到语言文件: $file
+                        Missing language file: $file
+                    """.t()
+                )
             }
         }
     }
@@ -85,8 +90,6 @@ class ResourceReader(val clazz: Class<*>, val migrate: Boolean = true) {
      * @param code 语言代码
      */
     fun loadNodes(file: Configuration, nodesMap: HashMap<String, Type>, code: String) {
-        // 迁移旧版本
-        migrateLegacyVersion(file)
         // 加载节点
         file.getKeys(false).forEach { node ->
             when (val obj = file[node]) {
@@ -114,13 +117,6 @@ class ResourceReader(val clazz: Class<*>, val migrate: Boolean = true) {
     }
 
     /**
-     * 获取所有有效的语言文件节点
-     */
-    private fun ConfigurationSection.getLanguageNodes(): Map<String, Any?> {
-        return getValues(true).filter { it.key.endsWith(".==") || it.key.endsWith(".type") }
-    }
-
-    /**
      * 从映射中加载语言节点
      *
      * @param map 包含节点信息的映射
@@ -135,11 +131,21 @@ class ResourceReader(val clazz: Class<*>, val migrate: Boolean = true) {
             if (typeInstance != null) {
                 typeInstance.init(map)
             } else {
-                warning("Unsupported language type: $node > $type ($code)")
+                warning(
+                    """
+                        不支持的语言文件类型: $node > $type ($code)
+                        Unsupported language type: $node > $type ($code)
+                    """.t()
+                )
             }
             typeInstance
         } else {
-            warning("Missing language type: $map ($code)")
+            warning(
+                """
+                    语言文件类型缺失: $node ($code)
+                    Missing language type: $map ($code)
+                """.t()
+            )
             null
         }
     }
@@ -169,98 +175,7 @@ class ResourceReader(val clazz: Class<*>, val migrate: Boolean = true) {
         }
     }
 
-    /**
-     * 迁移旧版本的配置文件格式
-     *
-     * 此函数用于处理旧版本的配置文件，将其转换为新的格式。主要进行以下操作：
-     * 1. 将包含点号的键名替换为使用连字符的键名
-     * 2. 处理特殊的值类型，如 ConfigurationSection 和 List
-     * 3. 对空字符串进行特殊处理
-     *
-     * @param file 需要迁移的配置文件对象
-     */
-    private fun migrateLegacyVersion(file: Configuration) {
-        if (file.file == null) {
-            return
-        }
-        var fixed = false
-        val values = file.getLanguageNodes().toSortedMap()
-        values.forEach {
-            if (it.key.contains('.')) {
-                fixed = true
-                file[it.key.substringBefore('.')] = null
-                file[it.key.replace('.', '-')] = when (val obj = it.value) {
-                    // 处理 ConfigurationSection
-                    is ConfigurationSection -> migrateLegacyJsonType(obj)
-                    // 处理列表
-                    is List<*> -> {
-                        obj.map { element ->
-                            when (element) {
-                                is Map<*, *> -> migrateLegacyJsonType(element.mapKeys { entry -> entry.key.toString() }.toSection(Configuration.empty()))
-                                is String -> element.ifEmpty { "&r" }
-                                else -> element
-                            }
-                        }
-                    }
-                    // 跳过
-                    else -> obj
-                }
-                debug("Migrate language: ${it.key}: ${it.key.substringBefore('.')} -> ${it.key.replace('.', '-')}: ${file[it.key.replace('.', '-')]}")
-            }
-        }
-        if (fixed) {
-            file.saveToFile()
-        }
-    }
-
-    /**
-     * 对老版本的 Json 写法进行迁移更新
-     *
-     * @param section 需要迁移的 ConfigurationSection 对象
-     * @return 迁移后的 ConfigurationSection 对象
-     */
-    private fun migrateLegacyJsonType(section: ConfigurationSection): ConfigurationSection {
-        val type = section.getString("==", section.getString("type")) ?: return section
-        if (type.lowercase() != "json") {
-            return section
-        }
-        var text = section.getString("text") ?: return section
-        val argSection = section.getConfigurationSection("args") ?: return section
-        // 对已有的变量进行转义
-        text = text.replace("[", "\\[").replace("]", "\\]")
-        val args = argSection.getKeys(false).mapNotNull { argSection.getConfigurationSection(it) }.associate { it.name to it.getValues(false) }
-        val newArgs = ArrayList<Map<String, Any?>>()
-        val matcher = legacyArgsRegex.matcher(text)
-        while (matcher.find()) {
-            val full = matcher.group(0)
-            val display = matcher.group(1)
-            val node = matcher.group(2)
-            val body = args[node]
-            if (body == null) {
-                text = text.replace(full, display)
-                continue
-            }
-            text = text.replace(full, "[$display]")
-            newArgs += body
-        }
-        section["text"] = text
-        section["args"] = newArgs
-        return section
-    }
-
-    private fun Map<*, *>.toSection(root: ConfigurationSection): ConfigurationSection {
-        forEach { (key, value) ->
-            when (value) {
-                is Map<*, *> -> root[key.toString()] = value.toSection(root.createSection(key.toString()))
-                else -> root[key.toString()] = value
-            }
-        }
-        return root
-    }
-
     companion object {
-
-        private val legacyArgsRegex = Pattern.compile("<(.+)@(.+)>")
 
         private val isFileWatcherHook by lazy {
             try {
