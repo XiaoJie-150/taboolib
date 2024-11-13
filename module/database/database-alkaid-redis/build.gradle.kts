@@ -13,6 +13,7 @@ tasks {
     withType<ShadowJar> {
         relocate("redis.clients.jedis.", "redis.clients.jedis_4_2_3.")
         relocate("com.electronwill.nightconfig.core.conversion", "taboolib.library.configuration")
+        relocate("com.electronwill.nightconfig", "com.electronwill.nightconfig_3_6_7")
         relocate("org.yaml.snakeyaml.", "org.yaml.snakeyaml_2_0.")
     }
 }
