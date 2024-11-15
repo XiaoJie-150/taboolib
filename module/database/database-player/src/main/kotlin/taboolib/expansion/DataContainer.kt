@@ -31,7 +31,11 @@ class DataContainer(val user: String, val database: Database) {
      */
     operator fun set(key: String, value: Any) {
         source[key] = value.toString()
-        save(key)
+        if (value.toString().isEmpty()) {
+            source.remove(key)
+        } else {
+            save(key)
+        }
     }
 
     /**
