@@ -140,7 +140,7 @@ object ProtocolHandler : OpenListener {
      */
     @Awake(LifeCycle.DISABLE)
     private fun onDisable() {
-        if (TabooLib.isStopped()) {
+        if (TabooLib.isStopped() || !isBukkitServerRunning) {
             return
         }
         if (instance != null) {
