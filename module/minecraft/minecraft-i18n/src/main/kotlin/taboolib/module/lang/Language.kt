@@ -80,6 +80,12 @@ object Language {
     var enableSimpleComponent = false
 
     /**
+     * 是否启用文件监听
+     * 于 2024/11/20 起，不再默认启用
+     */
+    var enableFileWatcher = false
+
+    /**
      * 重设根目录
      * 传入 "i18n" 会将语言文件写入 "i18n/{0}/{1}" 目录
      */

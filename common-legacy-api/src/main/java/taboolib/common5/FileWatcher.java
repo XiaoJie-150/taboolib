@@ -1,11 +1,9 @@
 package taboolib.common5;
 
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
-import taboolib.common.Inject;
 import taboolib.common.LifeCycle;
-import taboolib.common.platform.Awake;
-import taboolib.common.platform.Releasable;
-import taboolib.common.platform.SkipTo;
+import taboolib.common.TabooLib;
+import taboolib.common.platform.Ghost;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,10 +20,8 @@ import java.util.function.Consumer;
  *
  * @author lzzelAliz
  */
-@Awake
-@Inject
-@SkipTo(LifeCycle.ENABLE)
-public class FileWatcher implements Releasable {
+@Ghost
+public class FileWatcher {
 
     /**
      * 文件监听器单例
@@ -63,6 +59,8 @@ public class FileWatcher implements Releasable {
                     ex.printStackTrace();
                 }
             }), 1000, interval, TimeUnit.MILLISECONDS);
+            // 注册关闭回调
+            TabooLib.registerLifeCycleTask(LifeCycle.DISABLE, 0, this::release);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -111,7 +109,6 @@ public class FileWatcher implements Releasable {
     /**
      * 释放资源
      */
-    @Override
     public void release() {
         executorService.shutdown();
         fileListenerMap.values().forEach(FileListener::cancel);
