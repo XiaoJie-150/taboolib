@@ -79,7 +79,7 @@ object ProtocolHandler : OpenListener {
         var current = packet
         var isCancelled = false
         containers.forEach {
-            val result = it.call(method, arrayOf(sender, channel, packet))
+            val result = it.call(method, arrayOf(sender, channel, current))
             if (result.isSuccessful) {
                 current = result.value ?: current
             } else {
