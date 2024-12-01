@@ -33,6 +33,7 @@ class DataContainer(val user: String, val database: Database) {
         source[key] = value.toString()
         if (value.toString().isEmpty()) {
             source.remove(key)
+            delete(key)
         } else {
             save(key)
         }
@@ -113,6 +114,13 @@ class DataContainer(val user: String, val database: Database) {
      */
     fun save(key: String) {
         submitAsync { database[user, key] = source[key]!! }
+    }
+
+    /**
+     * 从数据库执行删除指定的键操作
+     */
+    fun delete(key: String) {
+        submitAsync { database.remove(user, key) }
     }
 
     /**
