@@ -156,6 +156,11 @@ class PlayerWorldContactEvent(val player: Player, val action: Action) : Cancelab
         var usePriority = EventPriority.NORMAL
 
         /**
+         * 是否忽略已取消的事件
+         */
+        var ignoreCancelled = true
+
+        /**
          * 本插件是否监听了 [PlayerWorldContactEvent] 事件
          */
         val isListened: Boolean
@@ -165,7 +170,7 @@ class PlayerWorldContactEvent(val player: Player, val action: Action) : Cancelab
         private fun onEnable() {
             if (!isListened) return
             // 左键交互实体（造成伤害）
-            registerBukkitListener(EntityDamageByEntityEvent::class.java, usePriority) { e ->
+            registerBukkitListener(EntityDamageByEntityEvent::class.java, usePriority, ignoreCancelled) { e ->
                 val player = e.damager as? Player ?: return@registerBukkitListener
                 // 仅限左键常规攻击
                 if (e.cause == EntityDamageEvent.DamageCause.ENTITY_ATTACK || e.cause == EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK) {
@@ -176,7 +181,7 @@ class PlayerWorldContactEvent(val player: Player, val action: Action) : Cancelab
                 }
             }
             // 左键、右键、物理交互方块
-            registerBukkitListener(PlayerInteractEvent::class.java, usePriority) { e ->
+            registerBukkitListener(PlayerInteractEvent::class.java, usePriority, ignoreCancelled) { e ->
                 val action = when {
                     e.isRightClick() -> Action.RightClickBlock(e.hand ?: EquipmentSlot.HAND, e.clickedBlock, e.blockFace, e)
                     e.isLeftClick() -> Action.LeftClickBlock(e.hand ?: EquipmentSlot.HAND, e.clickedBlock, e.blockFace, e)
@@ -188,7 +193,7 @@ class PlayerWorldContactEvent(val player: Player, val action: Action) : Cancelab
                 }
             }
             // 右键交互实体
-            registerBukkitListener(PlayerInteractAtEntityEvent::class.java, usePriority) { e ->
+            registerBukkitListener(PlayerInteractAtEntityEvent::class.java, usePriority, ignoreCancelled) { e ->
                 if (!PlayerWorldContactEvent(e.player, Action.RightClickEntity(e.hand, e.rightClicked, e.clickedPosition, e)).callIf()) {
                     e.isCancelled = true
                 }

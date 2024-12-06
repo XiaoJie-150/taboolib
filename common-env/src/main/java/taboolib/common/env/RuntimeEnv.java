@@ -52,7 +52,8 @@ public class RuntimeEnv {
             // 加载 Kotlin 环境
             if (loadKotlin) {
                 try {
-                    ENV_DEPENDENCY.loadDependency("org.jetbrains.kotlin:kotlin-stdlib:" + KOTLIN_VERSION, rel);
+                    ENV_DEPENDENCY.loadDependency("org.jetbrains.kotlin:kotlin-stdlib:" + KOTLIN_VERSION, false, rel);
+                    ENV_DEPENDENCY.loadDependency("org.jetbrains.kotlin:kotlin-stdlib-jdk8:" + KOTLIN_VERSION, false, rel);
                 } catch (Throwable e) {
                     throw new RuntimeException(e);
                 }
