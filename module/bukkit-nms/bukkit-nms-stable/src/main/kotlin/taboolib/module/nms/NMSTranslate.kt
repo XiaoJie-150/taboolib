@@ -1,7 +1,6 @@
 package taboolib.module.nms
 
 import org.bukkit.Material
-import org.bukkit.Translatable
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.entity.Entity
 import org.bukkit.entity.Player
@@ -115,7 +114,11 @@ class NMSTranslateImpl : NMSTranslate() {
     /**
      * 是否支持 Translatable
      */
-    val isTranslatableSupported = runCatching { Translatable::class.java }.isSuccess
+    val isTranslatableSupported by lazy {
+        if (MinecraftVersion.versionId >= 11903) {
+            runCatching { Class.forName("org.bukkit.Translatable") }.isSuccess
+        } else false
+    }
 
     // region Reflection Cache
 
