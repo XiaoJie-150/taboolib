@@ -10,8 +10,10 @@ import org.tabooproject.reflex.Reflex.Companion.getProperty
 import org.tabooproject.reflex.Reflex.Companion.invokeMethod
 import taboolib.common.UnsupportedVersionException
 import taboolib.common.util.unsafeLazy
+import taboolib.library.xseries.XMaterial
 import taboolib.module.nms.MinecraftLanguage.LanguageKey.Type
 import taboolib.module.nms.legacy.NMSPotionEffect
+import taboolib.platform.util.buildItem
 import java.lang.reflect.Method
 
 /**
@@ -19,6 +21,20 @@ import java.lang.reflect.Method
  */
 fun ItemStack.getName(player: Player? = null): String {
     return if (itemMeta?.hasDisplayName() == true) itemMeta!!.displayName else getI18nName(player)
+}
+
+/**
+ * 获取 Material 的译名
+ */
+fun Material.getI18nName(player: Player? = null): String {
+    return buildItem(this).getI18nName(player)
+}
+
+/**
+ * 获取 XMaterial 的译名
+ */
+fun XMaterial.getI18nName(player: Player? = null): String {
+    return buildItem(this).getI18nName(player)
 }
 
 /**
