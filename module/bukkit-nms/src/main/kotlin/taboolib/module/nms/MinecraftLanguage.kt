@@ -115,7 +115,7 @@ object MinecraftLanguage {
     var resourceUrl = "https://resources.download.minecraft.net"
 
     /** 支持的语言文件 */
-    val supportedLanguage = arrayListOf("zh_cn", "zh_tw", "en_gb")
+    val supportedLanguage = arrayListOf("zh_cn", "zh_tw", "en_gb", "en_us")
 
     /** 语言文件 */
     val files = hashMapOf<String, LanguageFile>()
