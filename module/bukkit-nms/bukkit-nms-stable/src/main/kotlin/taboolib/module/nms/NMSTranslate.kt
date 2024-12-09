@@ -17,6 +17,11 @@ import taboolib.platform.util.buildItem
 import java.lang.reflect.Method
 
 /**
+ * 缓存材质,实体,附魔,药水效果原版名
+ */
+private val translate: HashMap<String, String> = HashMap()
+
+/**
  * 获取物品的名称（若存在 displayName 则返回 displayName，反之获取译名）
  */
 fun ItemStack.getName(player: Player? = null): String {
@@ -27,46 +32,58 @@ fun ItemStack.getName(player: Player? = null): String {
  * 获取 Material 的译名
  */
 fun Material.getI18nName(player: Player? = null): String {
-    return buildItem(this).getI18nName(player)
+    return translate[name] ?: buildItem(this).getI18nName(player)
 }
 
 /**
  * 获取 XMaterial 的译名
  */
 fun XMaterial.getI18nName(player: Player? = null): String {
-    return buildItem(this).getI18nName(player)
+    return translate[name] ?: buildItem(this).getI18nName(player)
 }
 
 /**
  * 获取物品的译名
  */
 fun ItemStack.getI18nName(player: Player? = null): String {
-    val file = player?.getMinecraftLanguageFile() ?: MinecraftLanguage.getDefaultLanguageFile() ?: return "NO_LOCALE"
-    return file[getLanguageKey()] ?: getLanguageKey().path
+    return translate[type.name] ?: (player?.getMinecraftLanguageFile() ?: MinecraftLanguage.getDefaultLanguageFile())?.let {
+        val value = it[getLanguageKey()] ?: getLanguageKey().path
+        translate[type.name] = value
+        value
+    } ?: "NO_LOCALE"
 }
 
 /**
  * 获取实体的译名
  */
 fun Entity.getI18nName(player: Player? = null): String {
-    val file = player?.getMinecraftLanguageFile() ?: MinecraftLanguage.getDefaultLanguageFile() ?: return "NO_LOCALE"
-    return file[getLanguageKey()] ?: getLanguageKey().path
+    return translate[name] ?: (player?.getMinecraftLanguageFile() ?: MinecraftLanguage.getDefaultLanguageFile())?.let {
+        val value = it[getLanguageKey()] ?: getLanguageKey().path
+        translate[name] = value
+        value
+    } ?: "NO_LOCALE"
 }
 
 /**
  * 获取附魔的译名
  */
 fun Enchantment.getI18nName(player: Player? = null): String {
-    val file = player?.getMinecraftLanguageFile() ?: MinecraftLanguage.getDefaultLanguageFile() ?: return "NO_LOCALE"
-    return file[getLanguageKey()] ?: getLanguageKey().path
+    return translate[name] ?:(player?.getMinecraftLanguageFile() ?: MinecraftLanguage.getDefaultLanguageFile())?.let {
+        val value = it[getLanguageKey()] ?: getLanguageKey().path
+        translate[name] = value
+        value
+    } ?: "NO_LOCALE"
 }
 
 /**
  * 获取药水效果的译名
  */
 fun PotionEffectType.getI18nName(player: Player? = null): String {
-    val file = player?.getMinecraftLanguageFile() ?: MinecraftLanguage.getDefaultLanguageFile() ?: return "NO_LOCALE"
-    return file[getLanguageKey()] ?: getLanguageKey().path
+    return translate[name] ?:(player?.getMinecraftLanguageFile() ?: MinecraftLanguage.getDefaultLanguageFile())?.let {
+        val value = it[getLanguageKey()] ?: getLanguageKey().path
+        translate[name] = value
+        value
+    } ?: "NO_LOCALE"
 }
 
 /**
