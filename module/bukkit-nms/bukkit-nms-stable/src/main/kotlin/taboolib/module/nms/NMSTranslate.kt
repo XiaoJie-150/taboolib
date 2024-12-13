@@ -42,7 +42,7 @@ fun Material.getI18nName(player: Player? = null): String {
  * 获取 XMaterial 的译名
  */
 fun XMaterial.getI18nName(player: Player? = null): String {
-    return translate[name] ?: parseMaterial()?.getI18nName(player) ?: "NO_ITEM"
+    return translate[name] ?: parseItem()?.getI18nName(player) ?: "NO_ITEM"
 }
 
 /**
