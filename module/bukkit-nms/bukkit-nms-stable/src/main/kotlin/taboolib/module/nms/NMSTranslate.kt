@@ -5,6 +5,7 @@ import org.bukkit.enchantments.Enchantment
 import org.bukkit.entity.Entity
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
+import org.bukkit.material.MaterialData
 import org.bukkit.potion.PotionEffectType
 import org.tabooproject.reflex.Reflex.Companion.getProperty
 import org.tabooproject.reflex.Reflex.Companion.invokeMethod
@@ -30,8 +31,10 @@ fun ItemStack.getName(player: Player? = null): String {
 
 /**
  * 获取 Material 的译名
+ * 1.12-版本不建议使用
  */
 fun Material.getI18nName(player: Player? = null): String {
+    val name = if (MinecraftVersion.isLowerOrEqual(MinecraftVersion.V1_12)) name + "_${MaterialData(this).data}" else name
     return translate[name] ?: buildItem(this).getI18nName(player)
 }
 
@@ -39,18 +42,20 @@ fun Material.getI18nName(player: Player? = null): String {
  * 获取 XMaterial 的译名
  */
 fun XMaterial.getI18nName(player: Player? = null): String {
-    return translate[name] ?: buildItem(this).getI18nName(player)
+    return translate[name] ?: parseMaterial()?.getI18nName(player) ?: "NO_ITEM"
 }
 
 /**
  * 获取物品的译名
  */
 fun ItemStack.getI18nName(player: Player? = null): String {
-    return translate[type.name] ?: (player?.getMinecraftLanguageFile() ?: MinecraftLanguage.getDefaultLanguageFile())?.let {
-        val value = it[getLanguageKey()] ?: getLanguageKey().path
-        translate[type.name] = value
+    val file = player?.getMinecraftLanguageFile() ?: MinecraftLanguage.getDefaultLanguageFile() ?: return "NO_LOCALE"
+    val name = if (MinecraftVersion.isLowerOrEqual(MinecraftVersion.V1_12)) type.name + "_${data?.data ?: 0}" else type.name
+    return translate[name] ?: let {
+        val value = file[getLanguageKey()] ?: getLanguageKey().path
+        translate[name] = value
         value
-    } ?: "NO_LOCALE"
+    }
 }
 
 /**
@@ -68,7 +73,7 @@ fun Entity.getI18nName(player: Player? = null): String {
  * 获取附魔的译名
  */
 fun Enchantment.getI18nName(player: Player? = null): String {
-    return translate[name] ?:(player?.getMinecraftLanguageFile() ?: MinecraftLanguage.getDefaultLanguageFile())?.let {
+    return translate[name] ?: (player?.getMinecraftLanguageFile() ?: MinecraftLanguage.getDefaultLanguageFile())?.let {
         val value = it[getLanguageKey()] ?: getLanguageKey().path
         translate[name] = value
         value
@@ -79,7 +84,7 @@ fun Enchantment.getI18nName(player: Player? = null): String {
  * 获取药水效果的译名
  */
 fun PotionEffectType.getI18nName(player: Player? = null): String {
-    return translate[name] ?:(player?.getMinecraftLanguageFile() ?: MinecraftLanguage.getDefaultLanguageFile())?.let {
+    return translate[name] ?: (player?.getMinecraftLanguageFile() ?: MinecraftLanguage.getDefaultLanguageFile())?.let {
         val value = it[getLanguageKey()] ?: getLanguageKey().path
         translate[name] = value
         value
